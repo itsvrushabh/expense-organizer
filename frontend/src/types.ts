@@ -12,4 +12,4 @@ export interface ExpenseSummary {
   expenses: Expense[]
 }
 
-export type ViewMode = 'day' | 'month' | 'year'
+export type ViewMode = 'day' | 'week' | 'month' | 'year'

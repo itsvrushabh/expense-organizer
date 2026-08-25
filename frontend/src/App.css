@@ -1,115 +1,199 @@
+/* ============ design tokens ============ */
+:root {
+  --primary: #6366f1;
+  --primary-deep: #4f46e5;
+  --accent: #a855f7;
+  --teal: #14b8a6;
+  --sky: #0ea5e9;
+  --amber: #f59e0b;
+  --orange: #f97316;
+  --pink: #ec4899;
+  --rose: #f43f5e;
+  --ink: #1e293b;
+  --ink-soft: #334155;
+  --muted: #64748b;
+  --faint: #94a3b8;
+  --line: #e2e8f0;
+  --surface: #ffffff;
+  --bg-start: #f5f7ff;
+  --bg-end: #fdf3ff;
+  --radius: 12px;
+  --shadow-sm: 0 2px 4px rgba(30, 41, 59, 0.08);
+  --shadow-md: 0 8px 24px rgba(30, 41, 59, 0.12);
+  --shadow-lg: 0 24px 60px rgba(30, 41, 59, 0.25);
+}
+
+/* ============ base ============ */
 .app {
   min-height: 100vh;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--ink-soft);
+  background: linear-gradient(160deg, var(--bg-start) 0%, var(--bg-end) 100%);
 }
 
 .header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(120deg, var(--primary) 0%, #8b5cf6 35%, #d946ef 70%, var(--pink) 100%);
   color: white;
   padding: 30px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   margin-bottom: 30px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .header h1 {
   font-size: 2.5rem;
   margin: 0;
+  text-shadow: 0 2px 12px rgba(255, 255, 255, 0.35);
 }
 
 .error-banner {
-  background: #fde8e8;
+  background: #fef2f2;
   color: #9b1c1c;
   padding: 12px 16px;
   border-radius: 8px;
   margin-bottom: 20px;
-  border: 1px solid #f5c2c2;
+  border: 1px solid #fecaca;
 }
 
+.currency-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2em;
+}
+.currency-selector select {
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.currency-selector select option {
+  color: var(--ink);
+}
+.currency-selector select:hover {
+  background: rgba(255, 255, 255, 0.32);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.25);
+}
+
+/* ============ add expense form ============ */
 .add-expense-form {
-  background: white;
+  background: var(--surface);
   padding: 25px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   margin-bottom: 30px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
-
 .add-expense-form h2 {
   margin-bottom: 20px;
-  color: #333;
+  color: var(--ink);
 }
-
 .add-expense-form form {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1.5fr auto;
   gap: 10px;
 }
-
 .add-expense-form input {
   padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
   font-size: 14px;
-  transition: border-color 0.3s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .add-expense-form input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
 }
-
-.add-expense-form button {
+.add-expense-form button[type='submit'] {
   padding: 12px 24px;
-  background: #667eea;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.2s ease;
+}
+.add-expense-form button[type='submit']:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
+}
+.add-expense-form button[type='submit']:active {
+  transform: scale(0.97);
 }
 
-.add-expense-form button:hover {
-  background: #5568d3;
-}
-
+/* ============ controls ============ */
 .controls {
-  background: white;
+  background: var(--surface);
   padding: 20px;
-  border-radius: 10px;
+  border-radius: var(--radius);
   margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
   flex-wrap: wrap;
   gap: 20px;
+}
+.controls button {
+  transition: all 0.2s ease;
 }
 
 .view-selector {
   display: flex;
   gap: 10px;
 }
-
 .view-selector button {
   padding: 10px 20px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--line);
   background: white;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  transition: all 0.3s;
 }
-
-.view-selector button:hover {
-  border-color: #667eea;
-  color: #667eea;
+.view-selector button:hover:not(.active) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #eef2ff;
+  transform: translateY(-1px);
 }
-
-.view-selector button.active {
-  background: #667eea;
+.controls button:active {
+  transform: scale(0.95);
+}
+.view-selector button[data-mode='day'].active {
+  background: linear-gradient(135deg, var(--amber), var(--orange));
   color: white;
-  border-color: #667eea;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
+}
+.view-selector button[data-mode='week'].active {
+  background: linear-gradient(135deg, var(--teal), var(--sky));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(20, 184, 166, 0.35);
+}
+.view-selector button[data-mode='month'].active {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35);
+}
+.view-selector button[data-mode='year'].active {
+  background: linear-gradient(135deg, var(--pink), var(--rose));
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
 }
 
 .date-navigator {
@@ -117,46 +201,43 @@
   align-items: center;
   gap: 15px;
 }
-
 .date-navigator button {
   padding: 8px 16px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--line);
   background: white;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
-  transition: all 0.3s;
 }
-
 .date-navigator button:hover {
-  background: #f5f5f5;
-  border-color: #667eea;
+  background: #eef2ff;
+  border-color: var(--primary);
+  color: var(--primary);
 }
-
 .date-display {
-  font-weight: 600;
+  font-weight: 700;
   font-size: 16px;
   min-width: 200px;
   text-align: center;
-  color: #333;
+  color: var(--ink);
 }
 
 .total-display {
   font-size: 18px;
   font-weight: 700;
-  color: #667eea;
-  background: #f0f4ff;
+  color: var(--primary-deep);
+  background: #eef2ff;
   padding: 10px 20px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
+/* ============ tables ============ */
 .excel-container {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
-
 .excel-scroll {
   overflow-x: auto;
   overflow-y: auto;
@@ -165,41 +246,43 @@
 
 .excel-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 14px;
 }
-
 .excel-table thead {
   position: sticky;
   top: 0;
   z-index: 10;
 }
-
 .excel-table th {
-  background: #667eea;
+  background: linear-gradient(135deg, var(--primary), #8b5cf6);
   color: white;
-  padding: 12px;
+  padding: 10px 12px;
   text-align: left;
   font-weight: 600;
-  border: 1px solid #5568d3;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
   white-space: nowrap;
 }
-
 .excel-table td {
   padding: 10px 12px;
-  border: 1px solid #e0e0e0;
+  border-bottom: 1px solid #eef2f7;
 }
 
-.excel-table tbody tr:hover {
-  background: #f9f9f9;
+.amount-cell {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  transition: background 0.15s ease;
 }
-
-.excel-table tbody tr.has-data {
-  background: #fffef8;
+.excel-table tbody tr,
+.excel-table tbody td {
+  transition: background 0.15s ease;
 }
-
-.excel-table tbody tr.has-data:hover {
-  background: #fffaeb;
+.excel-table tbody tr:hover td,
+.excel-table tbody tr:hover .sticky-col {
+  background: #f2f5ff !important;
 }
 
 .sticky-col {
@@ -209,97 +292,261 @@
   z-index: 5;
   font-weight: 600;
 }
-
 .excel-table thead th.sticky-col {
   z-index: 15;
-  background: #667eea;
-}
-
-.excel-table tbody tr:hover .sticky-col {
-  background: #f9f9f9;
-}
-
-.excel-table tbody tr.has-data .sticky-col {
-  background: #fffef8;
-}
-
-.excel-table tbody tr.has-data:hover .sticky-col {
-  background: #fffaeb;
-}
-
-.amount-cell {
-  text-align: right;
-  font-family: 'Courier New', monospace;
-  font-weight: 500;
 }
 
 .total-col {
-  background: #f0f4ff;
+  background: #eef2ff;
   font-weight: 700;
-  color: #667eea;
+  color: var(--primary-deep);
 }
 
 .category-cell {
-  font-weight: 600;
-  color: #764ba2;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
-.date-cell {
-  color: #333;
+.date-cell,
+.month-cell,
+.day-cell {
+  color: var(--ink-soft);
+}
+.date-cell,
+.day-cell {
   min-width: 60px;
 }
-
 .month-cell {
-  color: #333;
   min-width: 80px;
 }
-
-.empty-cell {
-  text-align: center;
-  color: #999;
-  font-style: italic;
-  padding: 40px;
+.week-table th {
+  min-width: 110px;
 }
-
-.totals-row {
-  background: #f0f4ff !important;
-  border-top: 3px solid #667eea;
-}
-
-.totals-row td {
-  font-weight: 700;
-  color: #333;
-}
-
-.totals-row .sticky-col {
-  background: #f0f4ff !important;
-}
-
 .month-table th,
 .year-table th {
   min-width: 120px;
 }
 
+.empty-cell {
+  text-align: center;
+  color: var(--faint);
+  font-style: italic;
+  padding: 40px;
+}
+
+.totals-row td {
+  font-weight: 700;
+  color: var(--ink);
+}
+.totals-row .sticky-col,
+.totals-row td {
+  background: #eef2ff !important;
+}
+
+/* ============ category chips ============ */
+.category-chip {
+  display: inline-block;
+  font-size: 0.72em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+/* ============ grid view cells ============ */
+.grid-view {
+  padding: 14px;
+}
+.grid-cell {
+  position: relative;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 84px;
+  background: var(--surface);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.grid-cell.dimmed {
+  opacity: 0.35;
+}
+.grid-cell.has-data {
+  background: hsl(214 90% var(--heat-l, 93%));
+  border-color: transparent;
+}
+.grid-cell.clickable {
+  cursor: pointer;
+}
+.grid-cell.clickable:hover,
+.grid-cell.clickable:focus-visible {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 24px hsl(239 80% 60% / 0.25);
+  border-color: var(--primary);
+  filter: saturate(1.25) brightness(1.02);
+  z-index: 1;
+  outline: none;
+}
+.grid-cell.clickable:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 4px 12px hsl(239 80% 60% / 0.2);
+}
+.grid-cell.has-data::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px hsl(239 80% 60% / 0.2);
+}
+.cell-label {
+  font-weight: 700;
+  font-size: 0.95em;
+  color: var(--muted);
+}
+.cell-total {
+  margin-top: 6px;
+  font-size: 1.05em;
+  font-weight: 700;
+  color: var(--primary-deep);
+}
+.cell-count {
+  margin-top: 2px;
+  font-size: 0.78em;
+  color: var(--muted);
+}
+
+/* ============ cell detail modal ============ */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in 0.18s ease;
+}
+.cell-modal {
+  background: var(--surface);
+  border-radius: 14px;
+  width: min(480px, 92vw);
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  animation: pop-in 0.2s ease;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eef2f7;
+  background: linear-gradient(120deg, hsl(239 80% 62% / 0.08), hsl(292 80% 60% / 0.08));
+  border-radius: 14px 14px 0 0;
+}
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.05em;
+  color: var(--ink);
+}
+.modal-close {
+  border: none;
+  background: transparent;
+  font-size: 1.5em;
+  line-height: 1;
+  color: var(--faint);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+}
+.modal-close:hover {
+  color: var(--rose);
+  background: #fef2f2;
+}
+.expense-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 20px;
+  overflow-y: auto;
+}
+.expense-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #edf1f6;
+}
+.expense-row:last-child {
+  border-bottom: none;
+}
+.expense-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.expense-desc {
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.expense-amount {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--ink);
+}
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid #eef2f7;
+  background: #f8fafc;
+  border-radius: 0 0 14px 14px;
+  color: var(--muted);
+}
+.modal-footer strong {
+  color: var(--primary-deep);
+  font-size: 1.1em;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+}
+
+/* ============ responsive ============ */
 @media (max-width: 768px) {
   .add-expense-form form {
     grid-template-columns: 1fr;
   }
-
   .controls {
     flex-direction: column;
     align-items: stretch;
   }
-
   .view-selector,
   .date-navigator {
     justify-content: center;
   }
-
   .total-display {
     text-align: center;
   }
-
   .excel-scroll {
     max-height: 500px;
   }

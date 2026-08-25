@@ -1,4 +1,6 @@
 import type { Expense } from '../types'
+import { formatCurrency, type Currency } from '../currency'
+import { categoryColor } from '../colors'
 import { daysInMonth, MONTHS, parseLocalDate } from '../dates'
 
 interface Row {
@@ -17,6 +19,19 @@ function monthRows(selectedDate: Date): Row[] {
   }))
 }
 
+function weekRows(selectedDate: Date): Row[] {
+  const start = new Date(selectedDate)
+  start.setDate(start.getDate() - start.getDay())
+  return Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(start)
+    day.setDate(day.getDate() + i)
+    return {
+      key: String(i),
+      label: day.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      cellClass: 'day-cell',
+    }
+  })
+}
 function yearRows(): Row[] {
   return MONTHS.map((name, idx) => ({
     key: String(idx),
@@ -25,8 +40,12 @@ function yearRows(): Row[] {
   }))
 }
 
-function bucketKey(expense: Expense, mode: 'month' | 'year'): string {
+
+function bucketKey(expense: Expense, mode: 'week' | 'month' | 'year'): string {
   const d = parseLocalDate(expense.date)
+  if (mode === 'week') {
+    return String(d.getDay())
+  }
   return mode === 'month' ? String(d.getDate()) : String(d.getMonth())
 }
 
@@ -34,7 +53,7 @@ function pivot(
   expenses: Expense[],
   categories: string[],
   rows: Row[],
-  mode: 'month' | 'year',
+  mode: 'week' | 'month' | 'year',
 ) {
   const byRowAndCategory: Record<string, Record<string, number>> = {}
 
@@ -63,21 +82,20 @@ function pivot(
   return { byRowAndCategory, rowTotals, categoryTotals }
 }
 
-function formatAmount(amount: number | undefined): string {
-  return amount ? `$${amount.toFixed(2)}` : '-'
-}
-
-export function ExcelGridView({
+function ExcelGridView({
   expenses,
   selectedDate,
   mode,
+  currency,
 }: {
   expenses: Expense[]
   selectedDate: Date
-  mode: 'month' | 'year'
+  mode: 'week' | 'month' | 'year'
+  currency: Currency
 }) {
-  const rows = mode === 'month' ? monthRows(selectedDate) : yearRows()
-  const categories = [...new Set(expenses.map((e) => e.category))].sort()
+  const rows = mode === 'month' ? monthRows(selectedDate) : mode === 'week' ? weekRows(selectedDate) : yearRows()
+  const categories = [...new Set(expenses.map((e) => e.category))]
+  const showTotals = mode !== 'week'
   const { byRowAndCategory, rowTotals, categoryTotals } = pivot(
     expenses,
     categories,
@@ -85,70 +103,61 @@ export function ExcelGridView({
     mode,
   )
   const grandTotal = Object.values(categoryTotals).reduce((a, b) => a + b, 0)
-  const rowHeader = mode === 'month' ? 'Date' : 'Month'
-  const totalHeader = mode === 'month' ? 'Daily Total' : 'Monthly Total'
-  const tableClass = mode === 'month' ? 'month-table' : 'year-table'
-
+  const tableClass = mode === 'month' ? 'month-table' : mode === 'week' ? 'week-table' : 'year-table'
   return (
     <div className="excel-scroll">
-      <table className={`excel-table ${tableClass}`} >
-        <thead>
-        <tr>
-          {rows.map((row) => {
-            const total = rowTotals[row.key] ?? 0
-            return (
-              <th key={row.key} className={`sticky-col ${row.cellClass}`}>
-                {row.label}
-              </th>
-            )
-          }
-          )}
-        </tr>
-        </thead>
-        <tbody>
-          <tr></tr>
-        </tbody>
-      </table>
       <table className={`excel-table ${tableClass}`}>
         <thead>
           <tr>
-            <th className="sticky-col">{rowHeader}</th>
-            {categories.map((category) => (
-              <th key={category}>{category}</th>
+            <th className="sticky-col">Category</th>
+            {rows.map((row) => (
+              <th key={row.key} className={row.cellClass}>{row.label}</th>
             ))}
-            <th className="total-col">{totalHeader}</th>
+            {showTotals && <th className="total-col">Total</th>}
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => {
-            const total = rowTotals[row.key] ?? 0
+          {categories.map((category) => {
+            const color = categoryColor(category)
             return (
-              <tr key={row.key} className={total > 0 ? 'has-data' : ''}>
-                <td className={`sticky-col ${row.cellClass}`}>{row.label}</td>
-                {categories.map((category) => (
-                  <td key={category} className="amount-cell">
-                    {formatAmount(byRowAndCategory[row.key]?.[category])}
+              <tr key={category}>
+                <td className="sticky-col">
+                  <span className="category-chip" style={{ background: color.bg, color: color.fg }}>
+                    {category}
+                  </span>
+                </td>
+                {rows.map((row) => (
+                  <td key={row.key} className="amount-cell">
+                    {formatCurrency(byRowAndCategory[row.key]?.[category], currency)}
                   </td>
                 ))}
-                <td className="total-col amount-cell">{formatAmount(total)}</td>
+                {showTotals && (
+                  <td className="total-col amount-cell">
+                    {formatCurrency(categoryTotals[category], currency)}
+                  </td>
+                )}
               </tr>
             )
           })}
-          <tr className="totals-row">
-            <td className="sticky-col">
-              <strong>Total</strong>
-            </td>
-            {categories.map((category) => (
-              <td key={category} className="amount-cell">
-                <strong>${(categoryTotals[category] ?? 0).toFixed(2)}</strong>
+          {showTotals && (
+            <tr className="totals-row">
+              <td className="sticky-col">
+                <strong>Total</strong>
               </td>
-            ))}
-            <td className="total-col amount-cell">
-              <strong>${grandTotal.toFixed(2)}</strong>
-            </td>
-          </tr>
+              {rows.map((row) => (
+                <td key={row.key} className="amount-cell">
+                  <strong>{formatCurrency(rowTotals[row.key], currency)}</strong>
+                </td>
+              ))}
+              <td className="total-col amount-cell">
+                <strong>{formatCurrency(grandTotal, currency)}</strong>
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
   )
 }
+
+export { ExcelGridView }

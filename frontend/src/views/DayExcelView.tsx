@@ -1,6 +1,8 @@
 import type { Expense } from '../types'
+import { formatCurrency, type Currency } from '../currency'
+import { categoryColor } from '../colors'
 
-export function DayExcelView({ expenses }: { expenses: Expense[] }) {
+export function DayExcelView({ expenses, currency }: { expenses: Expense[], currency: Currency }) {
   const categories = [...new Set(expenses.map((e) => e.category))]
 
   return (
@@ -15,15 +17,18 @@ export function DayExcelView({ expenses }: { expenses: Expense[] }) {
       <tbody>
         {categories.map((category) => {
           const categoryExpenses = expenses.filter((e) => e.category === category)
+          const color = categoryColor(category)
           return categoryExpenses.map((expense, idx) => (
             <tr key={expense.id}>
               {idx === 0 && (
                 <td rowSpan={categoryExpenses.length} className="category-cell">
-                  {category}
+                  <span className="category-chip" style={{ background: color.bg, color: color.fg }}>
+                    {category}
+                  </span>
                 </td>
               )}
               <td>{expense.description}</td>
-              <td className="amount-cell">${expense.amount.toFixed(2)}</td>
+              <td className="amount-cell">{formatCurrency(expense.amount, currency)}</td>
             </tr>
           ))
         })}

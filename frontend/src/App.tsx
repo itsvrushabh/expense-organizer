@@ -1,10 +1,12 @@
 import { useState, useEffect, type FormEvent } from 'react'
 import './App.css'
 import { api } from './api'
-import { formatDate, stepDate, toDateInput } from './dates'
+import { CURRENCIES, SYMBOLS, toBase, type Currency } from './currency'
+import { formatDate, parseLocalDate, stepDate, toDateInput } from './dates'
 import type { Expense, ViewMode } from './types'
 import { DayExcelView } from './views/DayExcelView'
 import { ExcelGridView } from './views/ExcelGridView'
+import { Grid6x6View } from './views/Grid6x6View'
 
 const emptyForm = () => ({
   description: '',
@@ -14,6 +16,8 @@ const emptyForm = () => ({
 })
 
 function App() {
+  const [currency, setCurrency] = useState<Currency>('INR')
+
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [viewMode, setViewMode] = useState<ViewMode>('month')
   const [selectedDate, setSelectedDate] = useState(new Date())
@@ -29,13 +33,26 @@ function App() {
       let path = ''
       if (viewMode === 'day') {
         path = `/expenses/day/${toDateInput(selectedDate)}`
+      } else if (viewMode === 'week') {
+        path = '/expenses'
       } else if (viewMode === 'month') {
         path = `/expenses/month/${selectedDate.getFullYear()}/${selectedDate.getMonth() + 1}`
       } else {
         path = `/expenses/year/${selectedDate.getFullYear()}`
       }
       const data = await api.getExpenses(path)
-      setExpenses(data.expenses || [])
+      let filteredExpenses = data.expenses || []
+      if (viewMode === 'week') {
+        const start = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
+        start.setDate(start.getDate() - start.getDay())
+        const end = new Date(start)
+        end.setDate(end.getDate() + 7)
+        filteredExpenses = filteredExpenses.filter((e) => {
+          const d = parseLocalDate(e.date)
+          return d >= start && d < end
+        })
+      }
+      setExpenses(filteredExpenses)
       setError(null)
     } catch (err) {
       console.error('Error fetching expenses:', err)
@@ -48,7 +65,7 @@ function App() {
     try {
       await api.addExpense({
         ...newExpense,
-        amount: parseFloat(newExpense.amount),
+        amount: toBase(parseFloat(newExpense.amount), currency),
       })
       setNewExpense(emptyForm())
       setError(null)
@@ -59,12 +76,18 @@ function App() {
     }
   }
 
-  const total = expenses.reduce((sum, exp) => sum + exp.amount, 0)
-
   return (
     <div className="app">
       <header className="header">
         <h1>Expense Organizer</h1>
+        <div className="currency-selector">
+          <span>🌍</span>
+          <select value={currency} onChange={(e) => setCurrency(e.target.value as Currency)}>
+            {CURRENCIES.map(({ code, label }) => (
+              <option key={code} value={code}>{label}</option>
+            ))}
+          </select>
+        </div>
       </header>
 
       {error && <div className="error-banner">{error}</div>}
@@ -81,7 +104,7 @@ function App() {
           />
           <input
             type="number"
-            placeholder="Amount"
+            placeholder={`Amount (${SYMBOLS[currency]})`}
             step="0.01"
             value={newExpense.amount}
             onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
@@ -106,9 +129,10 @@ function App() {
 
       <div className="controls">
         <div className="view-selector">
-          {(['day', 'month', 'year'] as const).map((mode) => (
+          {(['day', 'week', 'month', 'year'] as const).map((mode) => (
             <button
               key={mode}
+              data-mode={mode}
               className={viewMode === mode ? 'active' : ''}
               onClick={() => setViewMode(mode)}
             >
@@ -122,15 +146,15 @@ function App() {
           <span className="date-display">{formatDate(selectedDate, viewMode)}</span>
           <button onClick={() => setSelectedDate(stepDate(selectedDate, viewMode, 1))}>▶</button>
         </div>
-
-        <div className="total-display">Total: ${total.toFixed(2)}</div>
       </div>
 
       <div className="excel-container">
         {viewMode === 'day' ? (
-          <DayExcelView expenses={expenses} />
+          <DayExcelView expenses={expenses} currency={currency} />
+        ) : viewMode === 'week' ? (
+          <ExcelGridView expenses={expenses} selectedDate={selectedDate} mode={viewMode} currency={currency} />
         ) : (
-          <ExcelGridView expenses={expenses} selectedDate={selectedDate} mode={viewMode} />
+          <Grid6x6View expenses={expenses} selectedDate={selectedDate} mode={viewMode} currency={currency} />
         )}
       </div>
     </div>

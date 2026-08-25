@@ -27,9 +27,14 @@ export function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate()
 }
 
-export function formatDate(d: Date, mode: 'day' | 'month' | 'year'): string {
+export function formatDate(d: Date, mode: 'day' | 'week' | 'month' | 'year'): string {
   if (mode === 'day') {
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  }
+  if (mode === 'week') {
+    const start = new Date(d)
+    start.setDate(start.getDate() - start.getDay())
+    return `Week of ${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
   }
   if (mode === 'month') {
     return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
@@ -37,9 +42,10 @@ export function formatDate(d: Date, mode: 'day' | 'month' | 'year'): string {
   return String(d.getFullYear())
 }
 
-export function stepDate(d: Date, mode: 'day' | 'month' | 'year', direction: number): Date {
+export function stepDate(d: Date, mode: 'day' | 'week' | 'month' | 'year', direction: number): Date {
   const next = new Date(d)
   if (mode === 'day') next.setDate(next.getDate() + direction)
+  else if (mode === 'week') next.setDate(next.getDate() + 7 * direction)
   else if (mode === 'month') next.setMonth(next.getMonth() + direction)
   else next.setFullYear(next.getFullYear() + direction)
   return next
