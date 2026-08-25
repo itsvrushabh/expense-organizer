@@ -1,0 +1,306 @@
+.app {
+  min-height: 100vh;
+}
+
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+  font-size: 2.5rem;
+  margin: 0;
+}
+
+.error-banner {
+  background: #fde8e8;
+  color: #9b1c1c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #f5c2c2;
+}
+
+.add-expense-form {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.add-expense-form h2 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.add-expense-form form {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1.5fr auto;
+  gap: 10px;
+}
+
+.add-expense-form input {
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.add-expense-form input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.add-expense-form button {
+  padding: 12px 24px;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.add-expense-form button:hover {
+  background: #5568d3;
+}
+
+.controls {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.view-selector {
+  display: flex;
+  gap: 10px;
+}
+
+.view-selector button {
+  padding: 10px 20px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.view-selector button:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.view-selector button.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
+.date-navigator {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.date-navigator button {
+  padding: 8px 16px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+.date-navigator button:hover {
+  background: #f5f5f5;
+  border-color: #667eea;
+}
+
+.date-display {
+  font-weight: 600;
+  font-size: 16px;
+  min-width: 200px;
+  text-align: center;
+  color: #333;
+}
+
+.total-display {
+  font-size: 18px;
+  font-weight: 700;
+  color: #667eea;
+  background: #f0f4ff;
+  padding: 10px 20px;
+  border-radius: 6px;
+}
+
+.excel-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.excel-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  max-height: 600px;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.excel-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.excel-table th {
+  background: #667eea;
+  color: white;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  border: 1px solid #5568d3;
+  white-space: nowrap;
+}
+
+.excel-table td {
+  padding: 10px 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.excel-table tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.excel-table tbody tr.has-data {
+  background: #fffef8;
+}
+
+.excel-table tbody tr.has-data:hover {
+  background: #fffaeb;
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  background: white;
+  z-index: 5;
+  font-weight: 600;
+}
+
+.excel-table thead th.sticky-col {
+  z-index: 15;
+  background: #667eea;
+}
+
+.excel-table tbody tr:hover .sticky-col {
+  background: #f9f9f9;
+}
+
+.excel-table tbody tr.has-data .sticky-col {
+  background: #fffef8;
+}
+
+.excel-table tbody tr.has-data:hover .sticky-col {
+  background: #fffaeb;
+}
+
+.amount-cell {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.total-col {
+  background: #f0f4ff;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.category-cell {
+  font-weight: 600;
+  color: #764ba2;
+  vertical-align: top;
+}
+
+.date-cell {
+  color: #333;
+  min-width: 60px;
+}
+
+.month-cell {
+  color: #333;
+  min-width: 80px;
+}
+
+.empty-cell {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 40px;
+}
+
+.totals-row {
+  background: #f0f4ff !important;
+  border-top: 3px solid #667eea;
+}
+
+.totals-row td {
+  font-weight: 700;
+  color: #333;
+}
+
+.totals-row .sticky-col {
+  background: #f0f4ff !important;
+}
+
+.month-table th,
+.year-table th {
+  min-width: 120px;
+}
+
+@media (max-width: 768px) {
+  .add-expense-form form {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .view-selector,
+  .date-navigator {
+    justify-content: center;
+  }
+
+  .total-display {
+    text-align: center;
+  }
+
+  .excel-scroll {
+    max-height: 500px;
+  }
+}
