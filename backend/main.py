@@ -1,0 +1,48 @@
+import os
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+import storage
+from routers import expenses
+
+
+def create_app() -> FastAPI:
+    seeded = storage.load_seed_data()
+    if seeded:
+        print(f"Seeded {seeded} expenses from {os.environ.get('SEED_FILE')}")
+
+    application = FastAPI(title="Expense Organizer", version="1.0.0")
+
+    application.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    application.include_router(expenses.router)
+
+    @application.get("/")
+    async def root():
+        return {
+            "message": "Expense Organizer API",
+            "endpoints": {
+                "add_expense": "POST /expenses",
+                "all_expenses": "GET /expenses",
+                "day_expenses": "GET /expenses/day/{date}",
+                "month_expenses": "GET /expenses/month/{year}/{month}",
+                "year_expenses": "GET /expenses/year/{year}",
+                "category_expenses": "GET /expenses/category/{category}",
+                "delete_expense": "DELETE /expenses/{id}",
+            },
+        }
+
+    return application
+
+
+app = create_app()
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

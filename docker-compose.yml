@@ -1,9 +1,10 @@
 services:
   backend:
-    build: .
+    build: ./backend
     container_name: expense-backend
     volumes:
-      - ./app:/app
+      - ./backend:/app
+      - ./data:/app/data:ro
     ports:
       - "8000:8000"
     environment:
