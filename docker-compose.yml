@@ -4,7 +4,6 @@ services:
     container_name: expense-backend
     volumes:
       - ./backend:/app
-      - ./data:/app/data:ro
     ports:
       - "8000:8000"
     environment:
