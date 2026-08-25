@@ -33,6 +33,23 @@ export const api = {
       }),
     ),
 
+  updateExpense: async (
+    id: number,
+    data: {
+      description: string
+      amount: number
+      category: string
+      date: string
+    },
+  ): Promise<Expense> =>
+    handle<Expense>(
+      await fetch(`${API_BASE}/expenses/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }),
+    ),
+
   deleteExpense: async (id: number): Promise<void> => {
     const res = await fetch(`${API_BASE}/expenses/${id}`, { method: 'DELETE' })
     if (!res.ok) throw new Error(`Failed to delete expense ${id}`)

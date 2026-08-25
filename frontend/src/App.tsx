@@ -2,7 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react'
 import './App.css'
 import { api } from './api'
 import { CURRENCIES, SYMBOLS, toBase, type Currency } from './currency'
-import { formatDate, parseLocalDate, stepDate, toDateInput } from './dates'
+import { parseLocalDate, stepDate, toDateInput } from './dates'
 import type { Expense, ViewMode } from './types'
 import { DayExcelView } from './views/DayExcelView'
 import { ExcelGridView } from './views/ExcelGridView'
@@ -76,58 +76,35 @@ function App() {
     }
   }
 
+  const updateExpense = async (
+    id: number,
+    data: { description: string; amount: number; category: string; date: string },
+  ) => {
+    try {
+      await api.updateExpense(id, data)
+      setError(null)
+      fetchExpenses()
+    } catch (err) {
+      console.error('Error updating expense:', err)
+      setError('Could not update expense')
+    }
+  }
+
+  const removeExpense = async (id: number) => {
+    try {
+      await api.deleteExpense(id)
+      setError(null)
+      fetchExpenses()
+    } catch (err) {
+      console.error('Error deleting expense:', err)
+      setError('Could not delete expense')
+    }
+  }
+
   return (
     <div className="app">
       <header className="header">
         <h1>Expense Organizer</h1>
-        <div className="currency-selector">
-          <span>🌍</span>
-          <select value={currency} onChange={(e) => setCurrency(e.target.value as Currency)}>
-            {CURRENCIES.map(({ code, label }) => (
-              <option key={code} value={code}>{label}</option>
-            ))}
-          </select>
-        </div>
-      </header>
-
-      {error && <div className="error-banner">{error}</div>}
-
-      <div className="add-expense-form">
-        <h2>Add New Expense</h2>
-        <form onSubmit={addExpense}>
-          <input
-            type="text"
-            placeholder="Description"
-            value={newExpense.description}
-            onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
-            required
-          />
-          <input
-            type="number"
-            placeholder={`Amount (${SYMBOLS[currency]})`}
-            step="0.01"
-            value={newExpense.amount}
-            onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
-            required
-          />
-          <input
-            type="text"
-            placeholder="Category"
-            value={newExpense.category}
-            onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
-            required
-          />
-          <input
-            type="date"
-            value={newExpense.date}
-            onChange={(e) => setNewExpense({ ...newExpense, date: e.target.value })}
-            required
-          />
-          <button type="submit">Add Expense</button>
-        </form>
-      </div>
-
-      <div className="controls">
         <div className="view-selector">
           {(['day', 'week', 'month', 'year'] as const).map((mode) => (
             <button
@@ -140,17 +117,74 @@ function App() {
             </button>
           ))}
         </div>
-
         <div className="date-navigator">
           <button onClick={() => setSelectedDate(stepDate(selectedDate, viewMode, -1))}>◀</button>
-          <span className="date-display">{formatDate(selectedDate, viewMode)}</span>
+          <input
+            type="date"
+            className="date-jump"
+            aria-label="Selected date"
+            value={toDateInput(selectedDate)}
+            onChange={(e) => e.target.value && setSelectedDate(parseLocalDate(e.target.value))}
+          />
           <button onClick={() => setSelectedDate(stepDate(selectedDate, viewMode, 1))}>▶</button>
         </div>
-      </div>
+        <div className="currency-selector">
+          <span>🌍</span>
+          <select value={currency} onChange={(e) => setCurrency(e.target.value as Currency)}>
+            {CURRENCIES.map(({ code, label }) => (
+              <option key={code} value={code}>{label}</option>
+            ))}
+          </select>
+        </div>
+      </header>
+
+      {error && <div className="error-banner">{error}</div>}
+
+      {viewMode === 'day' && (
+        <div className="add-expense-form">
+          <h2>Add New Expense</h2>
+          <form onSubmit={addExpense}>
+            <input
+              type="text"
+              placeholder="Description"
+              value={newExpense.description}
+              onChange={(e) => setNewExpense({ ...newExpense, description: e.target.value })}
+              required
+            />
+            <input
+              type="number"
+              placeholder={`Amount (${SYMBOLS[currency]})`}
+              step="0.01"
+              value={newExpense.amount}
+              onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Category"
+              value={newExpense.category}
+              onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+              required
+            />
+            <input
+              type="date"
+              value={newExpense.date}
+              onChange={(e) => setNewExpense({ ...newExpense, date: e.target.value })}
+              required
+            />
+            <button type="submit">Add Expense</button>
+          </form>
+        </div>
+      )}
 
       <div className="excel-container">
         {viewMode === 'day' ? (
-          <DayExcelView expenses={expenses} currency={currency} />
+          <DayExcelView
+            expenses={expenses}
+            currency={currency}
+            onUpdate={updateExpense}
+            onDelete={removeExpense}
+          />
         ) : viewMode === 'week' ? (
           <ExcelGridView expenses={expenses} selectedDate={selectedDate} mode={viewMode} currency={currency} />
         ) : (

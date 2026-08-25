@@ -133,42 +133,42 @@
   transform: scale(0.97);
 }
 
-/* ============ controls ============ */
-.controls {
-  background: var(--surface);
-  padding: 20px;
-  border-radius: var(--radius);
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: var(--shadow-sm);
-  flex-wrap: wrap;
-  gap: 20px;
-}
-.controls button {
-  transition: all 0.2s ease;
-}
-
 .view-selector {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
-.view-selector button {
-  padding: 10px 20px;
-  border: 2px solid var(--line);
-  background: white;
-  border-radius: 8px;
+.header .view-selector button {
+  padding: 9px 18px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+  border-radius: 999px;
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
 }
-.view-selector button:hover:not(.active) {
-  border-color: var(--primary);
-  color: var(--primary);
-  background: #eef2ff;
+.header .view-selector button:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
-.controls button:active {
+.date-navigator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header .date-navigator button {
+  padding: 7px 13px;
+  border: none;
+  background: rgba(255, 255, 255, 0.14);
+  color: white;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 15px;
+}
+.header .date-navigator button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.header .view-selector button:active,
+.header .date-navigator button:active {
   transform: scale(0.95);
 }
 .view-selector button[data-mode='day'].active {
@@ -196,23 +196,21 @@
   box-shadow: 0 4px 14px rgba(244, 63, 94, 0.35);
 }
 
-.date-navigator {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-.date-navigator button {
-  padding: 8px 16px;
-  border: 2px solid var(--line);
-  background: white;
-  border-radius: 8px;
+.date-jump {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
   cursor: pointer;
-  font-size: 16px;
+  transition: box-shadow 0.2s, background 0.2s;
 }
-.date-navigator button:hover {
-  background: #eef2ff;
-  border-color: var(--primary);
-  color: var(--primary);
+.date-jump:hover,
+.date-jump:focus {
+  outline: none;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
 }
 .date-display {
   font-weight: 700;
@@ -270,7 +268,7 @@
 }
 
 .amount-cell {
-  text-align: right;
+  text-align: left;
   font-family: 'Courier New', monospace;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -356,15 +354,20 @@
 
 /* ============ grid view cells ============ */
 .grid-view {
+  display: grid;
+  gap: 12px;
   padding: 14px;
+  height: calc(100vh - 240px);
+  min-height: 520px;
+  grid-auto-rows: minmax(110px, 1fr);
 }
 .grid-cell {
   position: relative;
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 10px 12px;
-  min-height: 84px;
   background: var(--surface);
+  transform: scale(var(--scl, 1));
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 .grid-cell.dimmed {
@@ -379,7 +382,7 @@
 }
 .grid-cell.clickable:hover,
 .grid-cell.clickable:focus-visible {
-  transform: translateY(-3px) scale(1.02);
+  transform: translateY(-4px) scale(calc(var(--scl, 1) * 1.04));
   box-shadow: 0 10px 24px hsl(239 80% 60% / 0.25);
   border-color: var(--primary);
   filter: saturate(1.25) brightness(1.02);
@@ -387,7 +390,7 @@
   outline: none;
 }
 .grid-cell.clickable:active {
-  transform: translateY(-1px) scale(0.98);
+  transform: translateY(-1px) scale(calc(var(--scl, 1) * 0.97));
   box-shadow: 0 4px 12px hsl(239 80% 60% / 0.2);
 }
 .grid-cell.has-data::after {
@@ -521,6 +524,111 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* ============ row actions & edit modal ============ */
+.actions-col {
+  width: 1%;
+}
+.actions-cell {
+  white-space: nowrap;
+  text-align: right;
+}
+.row-action {
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 5px 12px;
+  margin-left: 6px;
+  font-size: 0.82em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.row-action.edit {
+  color: var(--primary-deep);
+  background: #eef2ff;
+}
+.row-action.edit:hover {
+  background: var(--primary-deep);
+  color: white;
+  transform: translateY(-1px);
+}
+.row-action.delete {
+  color: #b91c1c;
+  background: #fef2f2;
+}
+.row-action.delete:hover {
+  background: #dc2626;
+  color: white;
+  transform: translateY(-1px);
+}
+.row-action:active {
+  transform: scale(0.95);
+}
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px;
+  overflow-y: auto;
+}
+.edit-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--muted);
+}
+.edit-form input {
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.edit-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid #eef2f7;
+  background: #f8fafc;
+  border-radius: 0 0 14px 14px;
+}
+.form-button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.form-button.primary {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: white;
+}
+.form-button.primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
+}
+.form-button.secondary {
+  background: white;
+  border: 2px solid var(--line);
+  color: var(--muted);
+}
+.form-button.secondary:hover {
+  border-color: var(--muted);
+  color: var(--ink);
+}
+
 @keyframes fade-in {
   from { opacity: 0; }
 }
@@ -536,16 +644,15 @@
   .add-expense-form form {
     grid-template-columns: 1fr;
   }
-  .controls {
+  .header {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+    text-align: center;
   }
   .view-selector,
   .date-navigator {
     justify-content: center;
-  }
-  .total-display {
-    text-align: center;
+    flex-wrap: wrap;
   }
   .excel-scroll {
     max-height: 500px;

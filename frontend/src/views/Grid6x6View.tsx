@@ -49,28 +49,17 @@ function Grid6x6View({
   }
 
   const daysInCurrentMonth = daysInMonth(selectedDate.getFullYear(), selectedDate.getMonth())
-  const gridColumns = mode === 'month' ? 6 : 3
-  const totalCells = mode === 'month' ? 36 : 12
 
-  const cells = Array.from({ length: totalCells }, (_, i) => {
+  const cells = Array.from({ length: mode === 'month' ? daysInCurrentMonth : 12 }, (_, i) => {
     if (mode === 'month') {
-      if (i < daysInCurrentMonth) {
-        const day = i + 1
-        const date = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day)
-        return {
-          key: i,
-          label: String(day),
-          title: date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }),
-          data: buckets[day],
-          dimmed: false,
-        }
-      }
+      const day = i + 1
+      const date = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day)
       return {
         key: i,
-        label: String(i - daysInCurrentMonth + 1),
-        title: '',
-        data: undefined,
-        dimmed: true,
+        label: String(day),
+        title: date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }),
+        data: buckets[day],
+        dimmed: false,
       }
     }
     const val = i + 1
@@ -94,19 +83,30 @@ function Grid6x6View({
   )
 
   const cellStyle = (cell: (typeof cells)[number]) => {
-    if (!cell.data || cell.data.length === 0 || maxCellTotal === 0) return undefined
-    const ratio = cell.data.reduce((sum, exp) => sum + exp.amount, 0) / maxCellTotal
+    if (!cell.data || cell.data.length === 0 || maxCellTotal === 0) {
+      return { '--scl': '0.92' } as React.CSSProperties
+    }
+    const total = cell.data.reduce((sum, exp) => sum + exp.amount, 0)
+    const ratio = total / maxCellTotal
     const level = Math.min(5, Math.max(1, Math.round(ratio * 5)))
-    return { '--heat-l': `${94 - level * 6}%` } as React.CSSProperties
+    return {
+      '--heat-l': `${94 - level * 6}%`,
+      '--scl': `${(0.9 + 0.25 * ratio).toFixed(3)}`,
+    } as React.CSSProperties
   }
 
   return (
     <div>
-      <div className="grid-view" style={{ display: 'grid', gridTemplateColumns: `repeat(${gridColumns}, 1fr)`, gap: '10px' }}>
+      <div
+        className="grid-view"
+        style={{
+          gridTemplateColumns: `repeat(auto-fill, minmax(${mode === 'month' ? '140px' : '200px'}, 1fr))`,
+        }}
+      >
         {cells.map((cell) => (
           <div
             key={cell.key}
-            className={`grid-cell${cell.data && cell.data.length > 0 ? ' clickable has-data' : ''}${cell.dimmed ? ' dimmed' : ''}`}
+            className={`grid-cell${cell.data && cell.data.length > 0 ? ' clickable has-data' : ''}`}
             style={cellStyle(cell)}
             onClick={() => openCell(cell.title, cell.data)}
             role={cell.data && cell.data.length > 0 ? 'button' : undefined}
@@ -133,26 +133,60 @@ function Grid6x6View({
               <h3>{selectedCell.title}</h3>
               <button className="modal-close" onClick={() => setSelectedCell(null)} aria-label="Close">×</button>
             </div>
-            <ul className="expense-list">
-              {selectedCell.expenses.map((exp) => {
-                const color = categoryColor(exp.category)
-                return (
-                  <li key={exp.id} className="expense-row">
-                    <div className="expense-main">
-                      <span className="expense-desc">{exp.description}</span>
-                      <span className="category-chip" style={{ background: color.bg, color: color.fg }}>
-                        {exp.category}
-                      </span>
-                    </div>
-                    <span className="expense-amount">{formatCurrency(exp.amount, currency)}</span>
-                  </li>
-                )
-              })}
-            </ul>
-            <div className="modal-footer">
-              <span>Total</span>
-              <strong>{formatCurrency(selectedCell.expenses.reduce((sum, exp) => sum + exp.amount, 0), currency)}</strong>
-            </div>
+            {mode === 'year' ? (
+              <>
+                <ul className="expense-list">
+                  {Object.entries(
+                    selectedCell.expenses.reduce<Record<string, number>>((byCategory, exp) => {
+                      byCategory[exp.category] = (byCategory[exp.category] ?? 0) + exp.amount
+                      return byCategory
+                    }, {}),
+                  )
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([category, total]) => {
+                      const color = categoryColor(category)
+                      return (
+                        <li key={category} className="expense-row">
+                          <span
+                            className="category-chip"
+                            style={{ background: color.bg, color: color.fg }}
+                          >
+                            {category}
+                          </span>
+                          <span className="expense-amount">{formatCurrency(total, currency)}</span>
+                        </li>
+                      )
+                    })}
+                </ul>
+                <div className="modal-footer">
+                  <span>Grand Total</span>
+                  <strong>{formatCurrency(selectedCell.expenses.reduce((sum, exp) => sum + exp.amount, 0), currency)}</strong>
+                </div>
+              </>
+            ) : (
+              <>
+                <ul className="expense-list">
+                  {selectedCell.expenses.map((exp) => {
+                    const color = categoryColor(exp.category)
+                    return (
+                      <li key={exp.id} className="expense-row">
+                        <div className="expense-main">
+                          <span className="expense-desc">{exp.description}</span>
+                          <span className="category-chip" style={{ background: color.bg, color: color.fg }}>
+                            {exp.category}
+                          </span>
+                        </div>
+                        <span className="expense-amount">{formatCurrency(exp.amount, currency)}</span>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <div className="modal-footer">
+                  <span>Total</span>
+                  <strong>{formatCurrency(selectedCell.expenses.reduce((sum, exp) => sum + exp.amount, 0), currency)}</strong>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
