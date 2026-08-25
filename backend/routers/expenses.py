@@ -70,6 +70,15 @@ async def get_expenses_by_category(category: str):
     )
 
 
+@router.put("/{expense_id}", response_model=Expense)
+async def update_expense(expense_id: int, expense: ExpenseCreate):
+    """Update an existing expense by ID"""
+    updated = await storage.update(expense_id, expense)
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    return updated
+
+
 @router.delete("/{expense_id}")
 async def delete_expense(expense_id: int):
     """Delete an expense by ID"""

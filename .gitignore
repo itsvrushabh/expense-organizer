@@ -11,3 +11,7 @@ dist/
 
 # Env
 .env
+
+# Coverage artifacts
+.coverage
+htmlcov/
