@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -8,10 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application
 COPY . .
-
-# Optional seed data (skipped if data/ does not exist)
-COPY data* ./data/
-ENV SEED_FILE=/app/data/2026_expenses.sql
 
 # Expose port
 EXPOSE 8000
