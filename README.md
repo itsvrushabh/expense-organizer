@@ -9,6 +9,7 @@ A modern, full-stack expense tracking platform designed for desktop, web, and mo
 All in-depth component and setup documentation is organized in the [`docs/`](docs/) directory:
 
 - 🚀 **[Setup & Deployment Guide](docs/setup.md)**: Docker Compose, local manual startup, environment variables, and troubleshooting.
+- 📦 **[GitHub CI and Release Status](docs/release.md)**: Main-branch, current-branch, workflow, version, and release status.
 - ⚙️ **[Backend Guide](docs/backend.md)**: FastAPI architecture, async routers, Pydantic v2 schemas, in-memory store, and 34 pytest tests.
 - 💻 **[Web Frontend Guide](docs/frontend.md)**: Bun + React 19 + TypeScript, Excel pivot table views, spend heatmaps, and `/api` proxy.
 - 📱 **[Mobile App & Rust Engine Guide](docs/mobile.md)**: Flutter client, Material 3 gradient UI, C-FFI Rust sync engine, offline queue, and build guides.
@@ -129,110 +130,12 @@ cd frontend
 bun x tsc --noEmit
 ```
 
-## GitHub Workflow Status and Releases
+## GitHub Workflow and Release Status
 
-The repository uses GitHub Actions for continuous validation and releases:
-
-### Live Workflow Status
-
-The badges below show the latest status for the default `main` branch. Click a badge
-to open the complete workflow history, including every branch, commit, job, and step.
-
-| Workflow | Current status | Trigger | Scope |
-|---|---|---|---|
-| `CI / Success` | [![CI success status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-success.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-success.yml) | After each CI sub-workflow completes | Required aggregate status for branch protection |
-| `CI / Python` | [![Python CI status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-python.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-python.yml) | Every pushed commit, pull request, and manual run | Backend, AI backend, and AI model tests plus Ruff formatting and linting |
-| `CI / Frontend` | [![Frontend CI status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-frontend.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-frontend.yml) | Every pushed commit, pull request, and manual run | Bun lockfile install, Biome formatting/linting, and TypeScript checks |
-| `CI / Flutter` | [![Flutter CI status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-flutter.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-flutter.yml) | Every pushed commit, pull request, and manual run | Both Flutter applications: Dart format, analyze, and tests |
-| `CI / Rust` | [![Rust CI status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-rust.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-rust.yml) | Every pushed commit, pull request, and manual run | rustfmt, Clippy, and native queue tests |
-| `CI / Services` | [![Services CI status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-services.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-services.yml) | Every pushed commit, pull request, and manual run | Compose validation, Docker startup, API proxy, and service health probes |
-| `Release` | [![Release status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/release.yml) | `vMAJOR.MINOR.PATCH` tags and manual validation runs | Tag builds publish Android APK previews, unsigned iOS IPAs, Docker images, and GitHub Release attachments; manual runs do not publish |
-| `Dependabot` | [View update activity](https://github.com/itsvrushabh/expense-organizer/pulls?q=is%3Apr+author%3Aapp%2Fdependabot) | Weekly schedule | Dependency update pull requests for Python, Bun/npm, Flutter/Dart, Cargo, Docker, and GitHub Actions |
-
-### Status Meanings
-
-GitHub reports the following workflow and job states:
-
-| Status | Meaning |
-|---|---|
-| `Passed` / `Success` | All required steps completed successfully. |
-| `Failed` | At least one required step failed; open the run for the failing job and log. |
-| `Running` / `In progress` | The workflow is currently executing. |
-| `Queued` / `Waiting` | GitHub has accepted the run but has not started it yet. |
-| `Cancelled` | The run was stopped manually or superseded by a newer commit. CI cancels older runs for the same ref. |
-| `Skipped` | A conditional job was intentionally not run, such as release-only work on a normal branch push. |
-| `Neutral` / `No status` | No applicable result is available yet, or the workflow has not run for that branch. |
-
-The required `CI / Success` workflow is the branch-protection gate. It starts with the
-other CI workflows, polls their exact commit and event until they complete, and fails if
-any required sub-workflow fails, is cancelled, is missing, or times out. Configure the
-repository's branch protection rules to require the displayed `CI / Success / ci-success`
-check before merging.
-
-### Checks by Area
-
-- Python services run pytest plus pinned Ruff formatting and lint checks in `CI / Python`.
-- The web frontend uses the committed `frontend/bun.lock`, pinned Biome formatting/lint
-    checks, and TypeScript type checking.
-- Both Flutter applications run `dart format`, `flutter analyze`, and `flutter test`.
-- The Rust offline queue runs `cargo fmt`, strict Clippy, and `cargo test` in `CI / Rust`.
-- `CI / Services` builds and starts only the backend/frontend path on every branch push. It
-    probe the frontend, API proxy, and expense endpoint, collect logs, and always clean up.
-- GGUF model-backed checks are not currently run by CI or release publishing because model
-    weights and GPU support are not available on standard GitHub-hosted runners. The model
-    image requires its GGUF file to be mounted separately.
-
-### Release Artifacts and Permissions
-
-Push a tag such as `v1.2.3` to start a release:
-
-```bash
-git tag v1.2.3
-git push origin v1.2.3
-```
-
-The release workflow builds preview APK and unsigned IPA artifacts for both mobile
-applications, publishes immutable version-tagged service images to GitHub Container
-Registry, and attaches the mobile files to the GitHub Release. Temporary workflow
-artifacts are retained for seven days. Android signing currently uses the repository's
-existing preview configuration; production distribution requires signing secrets and
-reviewed native platform projects. The `aimodel` image requires the GGUF model to be
-mounted separately at `/app/models`.
-
-Manual Release workflow runs are validation-only: they may build preview mobile artifacts
-but do not publish Docker images or create GitHub Releases. Only a valid `vMAJOR.MINOR.PATCH`
-tag can publish.
-
-Workflow permissions are explicit: CI has read-only repository access, while the release
-workflow alone has `contents: write` and `packages: write` for GitHub Releases and GHCR.
-Do not expose release secrets to pull requests from forks.
-
-### Inspecting Status
-
-Use the Actions tab to inspect a run, or use the GitHub CLI:
-
-```bash
-gh run list --workflow "CI / Success"
-gh run view RUN_ID --log-failed
-gh run list --workflow "CI / Python"
-gh run list --workflow "CI / Frontend"
-gh run list --workflow "CI / Flutter"
-gh run list --workflow "CI / Rust"
-gh run list --workflow "CI / Services"
-gh run list --workflow Release
-gh run watch RUN_ID
-```
-
-To inspect a specific branch rather than the default branch badge:
-
-```bash
-gh run list --workflow CI --branch ci/first_commit
-gh run list --workflow CI --commit COMMIT_SHA
-```
-
-Dependabot groups patch and minor updates by ecosystem. Major upgrades remain separate so
-they can be reviewed with any required migration work. Keep `frontend/bun.lock`, Flutter
-lockfiles, and `mobile/rust/Cargo.lock` committed when dependencies change.
+The complete status dashboard is maintained separately in [docs/release.md](docs/release.md).
+It contains the `main` branch status, current branch status, all CI sub-workflows, release
+status, version tags, artifact details, status meanings, and commands for inspecting another
+branch or commit.
 
 ---
 
@@ -280,6 +183,7 @@ expense-organizer/
 │   ├── mobile.md                 # Flutter mobile & Rust engine docs
 │   ├── expense-helper-mobile.md  # Flutter chat assistant docs
 │   ├── expense-helper-desktop.md # Desktop roadmap (on hold)
+│   ├── release.md                # Branch, workflow, version, and release status
 │   └── setup.md                  # Deployment & setup walkthrough
 ├── .github/
 │   ├── workflows/ci-python.yml     # Python tests, format, and lint
