@@ -35,7 +35,7 @@ This document separates the status of the protected `main` branch, the active de
 | Latest published version | [![Latest release](https://img.shields.io/github/v/release/itsvrushabh/expense-organizer?display_name=tag&sort=semver)](https://github.com/itsvrushabh/expense-organizer/releases/latest) | Latest published GitHub release |
 | Release history | [View releases](https://github.com/itsvrushabh/expense-organizer/releases) | APK, IPA, and release notes history |
 | Version tags | [View tags](https://github.com/itsvrushabh/expense-organizer/tags) | Releases use `vMAJOR.MINOR.PATCH`, for example `v1.2.3` |
-| Docker images | [View packages](https://github.com/itsvrushabh?tab=packages&repo_name=expense-organizer) | Tag-published service images in GHCR |
+| Docker images | [View packages](https://github.com/itsvrushabh?tab=packages&repo_name=expense-organizer) | Tag-published service images in GHCR; current tag: `v0.0.2` |
 
 A valid version tag starts the publishing workflow:
 
@@ -45,6 +45,36 @@ git push origin v1.2.3
 ```
 
 Tag releases publish immutable Docker image tags and attach mobile artifacts to the GitHub release. Manual Release workflow runs are validation-only and do not publish images or create releases. Android artifacts are preview builds, iOS artifacts are unsigned, and the AI model GGUF file must be supplied separately.
+
+### Published Images
+
+The `v0.0.2` Docker jobs completed successfully. Four separate images are published:
+
+```text
+ghcr.io/itsvrushabh/expense-organizer-backend:v0.0.2
+ghcr.io/itsvrushabh/expense-organizer-frontend:v0.0.2
+ghcr.io/itsvrushabh/expense-organizer-aibackend:v0.0.2
+ghcr.io/itsvrushabh/expense-organizer-aimodel:v0.0.2
+```
+
+Package pages:
+
+- [backend](https://github.com/users/itsvrushabh/packages/container/package/expense-organizer-backend)
+- [frontend](https://github.com/users/itsvrushabh/packages/container/package/expense-organizer-frontend)
+- [aibackend](https://github.com/users/itsvrushabh/packages/container/package/expense-organizer-aibackend)
+- [aimodel](https://github.com/users/itsvrushabh/packages/container/package/expense-organizer-aimodel)
+
+GHCR packages are private by default. Sign in before pulling private images:
+
+```bash
+echo "$CR_PAT" | docker login ghcr.io -u itsvrushabh --password-stdin
+docker pull ghcr.io/itsvrushabh/expense-organizer-backend:v0.0.2
+```
+
+To make an image visible without authentication, open the package under the repository
+owner's GitHub **Packages** page, open **Package settings**, and change package visibility
+to public. Repeat for each service image; repository workflow permissions alone do not
+change GHCR package visibility.
 
 ## Status Meanings
 

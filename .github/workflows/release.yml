@@ -156,6 +156,10 @@ jobs:
         with:
           context: ${{ matrix.context }}
           push: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ github.ref_name }}
           tags: |
             ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.ref_name }}
 
