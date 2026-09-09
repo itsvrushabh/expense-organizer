@@ -265,16 +265,22 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Expense Organizer',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
+                          const Expanded(
+                            child: Text(
+                              'Expense Organizer',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          const SizedBox(width: 8),
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               // Currency Selector
                               Container(
@@ -288,8 +294,18 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                                   child: DropdownButton<AppCurrency>(
                                     value: _currency,
                                     dropdownColor: const Color(0xFF312E81),
-                                    icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                                    icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 18),
                                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                    selectedItemBuilder: (context) {
+                                      return AppCurrency.values.map((c) {
+                                        return Center(
+                                          child: Text(
+                                            '${c.symbol} ${c.code}',
+                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                          ),
+                                        );
+                                      }).toList();
+                                    },
                                     items: AppCurrency.values.map((c) {
                                       return DropdownMenuItem(
                                         value: c,
@@ -390,7 +406,8 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                       Row(
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.arrow_left, color: Colors.white, size: 28),
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.arrow_left, color: Colors.white, size: 26),
                             onPressed: () => _stepDate(-1),
                           ),
                           Expanded(
@@ -411,7 +428,7 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                                 }
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
@@ -419,12 +436,17 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     const Icon(Icons.calendar_month, color: Colors.white, size: 16),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      DateFormat('yyyy-MM-dd').format(_selectedDate),
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        DateFormat('yyyy-MM-dd').format(_selectedDate),
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                        overflow: TextOverflow.ellipsis,
+                                        maxLines: 1,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -432,11 +454,16 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.arrow_right, color: Colors.white, size: 28),
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.arrow_right, color: Colors.white, size: 26),
                             onPressed: () => _stepDate(1),
                           ),
                           TextButton(
-                            style: TextButton.styleFrom(foregroundColor: Colors.white),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                            ),
                             onPressed: () {
                               setState(() {
                                 _selectedDate = DateTime.now();
@@ -644,9 +671,12 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          _showTableForMonthYear ? 'Spreadsheet Table View' : 'Spend Grid Heatmap',
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF64748B)),
+                        Expanded(
+                          child: Text(
+                            _showTableForMonthYear ? 'Spreadsheet Table View' : 'Spend Grid Heatmap',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF64748B)),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                         TextButton.icon(
                           onPressed: () => setState(() => _showTableForMonthYear = !_showTableForMonthYear),

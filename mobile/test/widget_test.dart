@@ -1,9 +1,12 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:expense_organizer_mobile/models/expense.dart';
 import 'package:expense_organizer_mobile/models/expense_summary.dart';
 import 'package:expense_organizer_mobile/models/queue_item.dart';
 import 'package:expense_organizer_mobile/services/api_service.dart';
+import 'package:expense_organizer_mobile/services/sync_service.dart';
 import 'package:expense_organizer_mobile/utils/currency.dart';
+import 'package:expense_organizer_mobile/views/web_style_app_screen.dart';
 import 'package:expense_organizer_mobile/views/widgets/period_selector.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -105,5 +108,25 @@ void main() {
     expect(AppCurrency.inr.format(10.0), '₹840.00');
     expect(AppCurrency.cny.format(10.0), '¥72.00');
     expect(AppCurrency.inr.toBase(840.0), 10.0);
+  });
+
+  testWidgets('WebStyleAppScreen renders without RenderFlex overflow on small screens', (tester) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+
+    final sync = SyncService();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WebStyleAppScreen(syncService: sync),
+      ),
+    );
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Expense Organizer'), findsOneWidget);
   });
 }
