@@ -44,12 +44,12 @@ class AIChatService {
   void _initDefaultUrl() {
     try {
       if (Platform.isAndroid) {
-        baseUrl = 'http://10.0.2.2:8001';
+        baseUrl = 'http://10.0.2.2:18001';
       } else {
-        baseUrl = 'http://127.0.0.1:8001';
+        baseUrl = 'http://127.0.0.1:18001';
       }
     } catch (_) {
-      baseUrl = 'http://127.0.0.1:8001';
+      baseUrl = 'http://127.0.0.1:18001';
     }
   }
 

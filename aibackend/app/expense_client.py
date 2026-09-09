@@ -1,34 +1,82 @@
 import logging
-from typing import Optional
+import re
+from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
 import httpx
 
 from app.config import EXPENSE_API_URL
 from app.schemas import ExpenseDraft
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("aibackend.expense_client")
+
+
+def normalize_iso_date(date_str: str, ref_date: Optional[datetime] = None) -> str:
+    """
+    Normalizes any date string (including 'today', 'yesterday', 'tomorrow', '2026-09-09')
+    into a valid ISO 8601 YYYY-MM-DD string that the core backend expects.
+    """
+    now = ref_date or datetime.now()
+    cleaned = (date_str or "").strip().lower()
+
+    if not cleaned or cleaned in ["today", "now"]:
+        return now.strftime("%Y-%m-%d")
+    if cleaned == "yesterday":
+        return (now - timedelta(days=1)).strftime("%Y-%m-%d")
+    if cleaned == "tomorrow":
+        return (now + timedelta(days=1)).strftime("%Y-%m-%d")
+
+    iso_match = re.search(r"\b(\d{4}-\d{2}-\d{2})\b", cleaned)
+    if iso_match:
+        return iso_match.group(1)
+
+    try:
+        dt = datetime.fromisoformat(cleaned)
+        return dt.strftime("%Y-%m-%d")
+    except Exception:
+        pass
+
+    return now.strftime("%Y-%m-%d")
 
 
 async def insert_expense_to_db(draft: ExpenseDraft) -> Optional[int]:
     """
-    Sends POST /expenses to the core expense backend to persist the confirmed expense.
-    Returns the new expense ID if successful, or raises an Exception.
+    Sends HTTP POST request to the core FastAPI backend to persist the expense.
     """
     url = f"{EXPENSE_API_URL}/expenses"
+    normalized_date = normalize_iso_date(draft.date)
     payload = {
         "description": draft.description,
-        "amount": round(draft.amount, 2),
+        "amount": draft.amount,
         "category": draft.category,
-        "date": draft.date,
+        "date": normalized_date,
     }
+    logger.info("Persisting expense to core backend at %s: %s", url, payload)
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        try:
-            response = await client.post(url, json=payload)
-            response.raise_for_status()
-            data = response.json()
-            expense_id = data.get("id")
-            logger.info("Successfully persisted expense to core DB with ID %s", expense_id)
-            return expense_id
-        except httpx.HTTPError as err:
-            logger.error("Failed to persist expense via %s: %s", url, err)
-            raise RuntimeError(f"Could not connect to core backend at {url}: {err}") from err
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(url, json=payload)
+            if resp.status_code in [200, 201]:
+                data = resp.json()
+                expense_id = data.get("id")
+                logger.info("Successfully created expense ID #%s in core backend", expense_id)
+                return expense_id
+            else:
+                logger.error("Failed to persist expense: status %s, response %s", resp.status_code, resp.text)
+                return None
+    except Exception as e:
+        logger.error("Exception occurred while calling core backend: %s", e)
+        return None
+
+
+async def check_backend_health() -> Dict[str, Any]:
+    """
+    Checks if the core FastAPI backend is reachable.
+    """
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(f"{EXPENSE_API_URL}/")
+            if resp.status_code == 200:
+                return {"status": "reachable", "details": resp.json()}
+            return {"status": "unreachable", "status_code": resp.status_code}
+    except Exception as e:
+        return {"status": "unreachable", "error": str(e)}

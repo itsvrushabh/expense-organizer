@@ -82,19 +82,19 @@ void main() {
   });
 
   test('ApiService sanitizeUrl formats addresses properly', () {
-    expect(ApiService.sanitizeUrl('192.168.1.50:8000/'), 'http://192.168.1.50:8000');
+    expect(ApiService.sanitizeUrl('192.168.1.50:13000/api/'), 'http://192.168.1.50:13000/api');
     expect(ApiService.sanitizeUrl('https://api.myexpense.com///'), 'https://api.myexpense.com');
-    expect(ApiService.sanitizeUrl('  http://localhost:8000  '), 'http://localhost:8000');
+    expect(ApiService.sanitizeUrl('  http://localhost:13000/api  '), 'http://localhost:13000/api');
   });
 
   test('ApiService loads and persists server URL via SharedPreferences', () async {
     SharedPreferences.setMockInitialValues({
-      ApiService.prefKey: 'http://192.168.1.100:8000',
+      ApiService.prefKey: 'http://192.168.1.100:13000/api',
     });
 
     final api = ApiService();
     await api.loadSavedBaseUrl();
-    expect(api.baseUrl, 'http://192.168.1.100:8000');
+    expect(api.baseUrl, 'http://192.168.1.100:13000/api');
 
     await api.updateBaseUrl('http://myserver.lan:9000');
     expect(api.baseUrl, 'http://myserver.lan:9000');

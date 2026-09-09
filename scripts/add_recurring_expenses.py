@@ -3,7 +3,7 @@
 Usage:
     python3 scripts/add_recurring_expenses.py [API_URL]
 
-Defaults to http://localhost:8000. Amounts are entered in INR and
+Defaults to http://localhost:13000/api. Amounts are entered in INR and
 normalized to the app's base currency (INR rate 84). Idempotent by
 description + date; skips duplicates.
 """
@@ -14,7 +14,7 @@ import urllib.error
 import urllib.request
 from datetime import date, timedelta
 
-API_URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8000"
+API_URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:13000/api"
 INR_RATE = 84
 TODAY = date.today()
 def months(start: date):

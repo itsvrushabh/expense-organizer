@@ -68,9 +68,10 @@ frontend/
 
 ## Proxy & Communication (`index.ts`)
 
-Bun runs a built-in HTTP server that serves the compiled React frontend on port `3000` while proxying any `/api/*` request to the FastAPI backend:
+Bun runs a built-in HTTP server that serves the compiled React frontend on internal port `3000` (published to host port `13000`) while proxying `/api` and `/api/*` requests to the FastAPI backend:
 
 ```ts
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const API_URL = process.env.API_URL || 'http://localhost:8000';
 ```
 
@@ -88,9 +89,9 @@ bun install
 
 ### Development Mode (with HMR)
 ```bash
-bun run dev
+PORT=13000 bun run dev
 ```
-Serves the web client at `http://localhost:3000` with instant Hot Module Reloading.
+Serves the web client at `http://localhost:13000` with instant Hot Module Reloading.
 
 ### Type Check
 ```bash

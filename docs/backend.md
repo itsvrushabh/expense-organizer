@@ -1,6 +1,6 @@
 # Backend Architecture & API Guide ⚙️
 
-The Expense Organizer backend is built with **FastAPI** (Python 3.11/3.13), providing high-performance asynchronous REST endpoints, strict Pydantic v2 data validation, CORS middleware, and in-memory transactional storage.
+The Expense Organizer backend is built with **FastAPI** (Python 3.11/3.13), providing high-performance asynchronous REST endpoints, strict Pydantic v2 data validation, CORS middleware, and transactional in-memory storage.
 
 ---
 
@@ -19,7 +19,7 @@ backend/
 │   ├── test_main.py     # Root endpoint catalog test
 │   ├── test_models.py   # Schema validation tests
 │   └── test_storage.py  # Storage engine tests
-├── Dockerfile           # Python Docker image
+├── Dockerfile           # Python Docker image (internal port 8000)
 └── requirements.txt     # Production dependencies
 ```
 
@@ -76,15 +76,21 @@ Aggregation response model:
 Generates recurring monthly entries (e.g., Home Loan EMI, Electric Bill, Internet Bill) with automated deduplication:
 ```bash
 python3 scripts/add_recurring_expenses.py [API_URL]
-# Defaults to http://localhost:8000
+# Defaults to http://localhost:13000/api (or http://localhost:8000 when running standalone backend)
 ```
 - Deduplicates using `(description, date)` tuples.
 - Normalizes currency amounts from INR to base USD (using conversion rate 84).
 
 ---
 
-## Running Backend Locally
+## Running Backend
 
+### Inside Docker (Zero Host Exposure)
+When running via `docker-compose up`, the `backend` service runs on internal port `8000` with **no exposed host port**.
+- All external traffic routes through the frontend proxy at `http://localhost:13000/api`
+- Interactive OpenAPI docs: `http://localhost:13000/api/docs`
+
+### Standalone Local Development
 ```bash
 cd backend
 python3 -m venv venv
@@ -94,7 +100,8 @@ pip install -r requirements.txt -r requirements-dev.txt
 uvicorn main:app --reload --port 8000
 ```
 
-Interactive OpenAPI documentation is available at:
+When running standalone without Docker:
+- Direct API: `http://localhost:8000`
 - Swagger UI: `http://localhost:8000/docs`
 - ReDoc: `http://localhost:8000/redoc`
 
@@ -102,8 +109,8 @@ Interactive OpenAPI documentation is available at:
 
 ## Running Tests
 
-The test suite contains 34 tests covering model validation, edge cases, date math, week calculation, and floating-point precision:
+The test suite contains 34 pytest unit & integration tests covering model validation, date math, week calculation, floating-point precision, and storage mutation:
 
 ```bash
-pytest backend/tests
+pytest backend/tests -v
 ```
