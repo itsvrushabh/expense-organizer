@@ -1,7 +1,8 @@
 import logging
 import re
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Any
+
 import httpx
 
 from app.config import EXPENSE_API_URL
@@ -10,7 +11,7 @@ from app.schemas import ExpenseDraft
 logger = logging.getLogger("aibackend.expense_client")
 
 
-def normalize_iso_date(date_str: str, ref_date: Optional[datetime] = None) -> str:
+def normalize_iso_date(date_str: str, ref_date: datetime | None = None) -> str:
     """
     Normalizes any date string (including 'today', 'yesterday', 'tomorrow', '2026-09-09')
     into a valid ISO 8601 YYYY-MM-DD string that the core backend expects.
@@ -38,7 +39,7 @@ def normalize_iso_date(date_str: str, ref_date: Optional[datetime] = None) -> st
     return now.strftime("%Y-%m-%d")
 
 
-async def insert_expense_to_db(draft: ExpenseDraft) -> Optional[int]:
+async def insert_expense_to_db(draft: ExpenseDraft) -> int | None:
     """
     Sends HTTP POST request to the core FastAPI backend to persist the expense.
     """
@@ -61,14 +62,16 @@ async def insert_expense_to_db(draft: ExpenseDraft) -> Optional[int]:
                 logger.info("Successfully created expense ID #%s in core backend", expense_id)
                 return expense_id
             else:
-                logger.error("Failed to persist expense: status %s, response %s", resp.status_code, resp.text)
+                logger.error(
+                    "Failed to persist expense: status %s, response %s", resp.status_code, resp.text
+                )
                 return None
     except Exception as e:
         logger.error("Exception occurred while calling core backend: %s", e)
         return None
 
 
-async def check_backend_health() -> Dict[str, Any]:
+async def check_backend_health() -> dict[str, Any]:
     """
     Checks if the core FastAPI backend is reachable.
     """

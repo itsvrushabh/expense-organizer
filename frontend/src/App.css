@@ -26,7 +26,7 @@
 /* ============ base ============ */
 .app {
   min-height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   color: var(--ink-soft);
   background: linear-gradient(160deg, var(--bg-start) 0%, var(--bg-end) 100%);
 }
@@ -113,7 +113,7 @@
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
 }
-.add-expense-form button[type='submit'] {
+.add-expense-form button[type="submit"] {
   padding: 12px 24px;
   background: linear-gradient(135deg, var(--primary), var(--accent));
   color: white;
@@ -124,12 +124,12 @@
   cursor: pointer;
   transition: all 0.2s ease;
 }
-.add-expense-form button[type='submit']:hover {
+.add-expense-form button[type="submit"]:hover {
   filter: brightness(1.08);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(139, 92, 246, 0.35);
 }
-.add-expense-form button[type='submit']:active {
+.add-expense-form button[type="submit"]:active {
   transform: scale(0.97);
 }
 
@@ -171,25 +171,25 @@
 .header .date-navigator button:active {
   transform: scale(0.95);
 }
-.view-selector button[data-mode='day'].active {
+.view-selector button[data-mode="day"].active {
   background: linear-gradient(135deg, var(--amber), var(--orange));
   color: white;
   border-color: transparent;
   box-shadow: 0 4px 14px rgba(249, 115, 22, 0.35);
 }
-.view-selector button[data-mode='week'].active {
+.view-selector button[data-mode="week"].active {
   background: linear-gradient(135deg, var(--teal), var(--sky));
   color: white;
   border-color: transparent;
   box-shadow: 0 4px 14px rgba(20, 184, 166, 0.35);
 }
-.view-selector button[data-mode='month'].active {
+.view-selector button[data-mode="month"].active {
   background: linear-gradient(135deg, var(--primary), var(--accent));
   color: white;
   border-color: transparent;
   box-shadow: 0 4px 14px rgba(168, 85, 247, 0.35);
 }
-.view-selector button[data-mode='year'].active {
+.view-selector button[data-mode="year"].active {
   background: linear-gradient(135deg, var(--pink), var(--rose));
   color: white;
   border-color: transparent;
@@ -269,7 +269,7 @@
 
 .amount-cell {
   text-align: left;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
   transition: background 0.15s ease;
@@ -368,7 +368,8 @@
   padding: 10px 12px;
   background: var(--surface);
   transform: scale(var(--scl, 1));
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, background 0.15s
+    ease;
 }
 .grid-cell.dimmed {
   opacity: 0.35;
@@ -394,7 +395,7 @@
   box-shadow: 0 4px 12px hsl(239 80% 60% / 0.2);
 }
 .grid-cell.has-data::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 8px;
   right: 8px;
@@ -630,7 +631,9 @@
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
+  from {
+    opacity: 0;
+  }
 }
 @keyframes pop-in {
   from {

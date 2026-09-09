@@ -17,6 +17,8 @@ from datetime import date, timedelta
 API_URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:13000/api"
 INR_RATE = 84
 TODAY = date.today()
+
+
 def months(start: date):
     year, month = start.year, start.month
     while True:

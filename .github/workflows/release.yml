@@ -41,6 +41,7 @@ jobs:
       - name: Build release APK
         working-directory: ${{ matrix.directory }}
         run: |
+          if [[ ! -d android ]]; then flutter create --platforms=android .; fi
           flutter pub get
           flutter build apk --release
       - name: Upload APK artifact
@@ -72,6 +73,7 @@ jobs:
       - name: Build unsigned IPA
         working-directory: ${{ matrix.directory }}
         run: |
+          if [[ ! -d ios ]]; then flutter create --platforms=ios .; fi
           flutter pub get
           flutter build ipa --release --no-codesign
       - name: Upload IPA artifact

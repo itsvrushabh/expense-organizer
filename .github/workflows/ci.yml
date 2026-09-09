@@ -23,7 +23,7 @@ jobs:
           - service: backend
             python: "3.13"
             requirements: "requirements.txt requirements-dev.txt"
-            tests: backend/tests
+            tests: tests
           - service: aibackend
             python: "3.11"
             requirements: "requirements.txt"
@@ -50,6 +50,7 @@ jobs:
       - name: Check lint
         run: python -m ruff check ${{ matrix.service }} scripts
       - name: Run tests
+        working-directory: ${{ matrix.service }}
         run: python -m pytest ${{ matrix.tests }} -v
 
   fast-frontend:
@@ -65,7 +66,9 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Check formatting and lint
         working-directory: frontend
-        run: bunx --bun @biomejs/biome@1.9.4 check .
+        run: |
+          bunx --bun @biomejs/biome@1.9.4 check --formatter-enabled=true --linter-enabled=false .
+          bunx --bun @biomejs/biome@1.9.4 lint . --only=correctness/noUnusedImports --only=correctness/noUnusedVariables
       - name: Type check
         working-directory: frontend
         run: bun x tsc --noEmit

@@ -1,21 +1,19 @@
-import pytest
-from unittest.mock import patch, AsyncMock
-from fastapi.testclient import TestClient
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, patch
 
+import app.main as main_module
+import pytest
 from app.main import create_app
 from app.model_client import ModelClient
 from app.session import SessionManager
 from app.tools import (
     TOOLS_SCHEMA,
+    ExpenseDraft,
+    tool_commit_expense,
     tool_draft_expense,
     tool_update_draft_field,
-    tool_commit_expense,
-    tool_ask_clarification,
-    tool_cancel_draft,
-    ExpenseDraft,
 )
-import app.main as main_module
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture

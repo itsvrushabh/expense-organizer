@@ -1,15 +1,13 @@
 from datetime import date, timedelta
-from typing import List
-
-from fastapi import APIRouter, HTTPException, Path
 
 import storage
+from fastapi import APIRouter, HTTPException, Path
 from models import Expense, ExpenseCreate, ExpenseSummary
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 
 
-def summarize(expenses: List[Expense], *, sort: bool = False) -> ExpenseSummary:
+def summarize(expenses: list[Expense], *, sort: bool = False) -> ExpenseSummary:
     if sort:
         expenses = sorted(expenses, key=lambda x: x.date)
     return ExpenseSummary(
@@ -99,9 +97,7 @@ async def get_year_expenses(year: int):
 async def get_expenses_by_category(category: str):
     """Get all expenses for a specific category"""
     expenses = await storage.get_all()
-    return summarize(
-        [exp for exp in expenses if exp.category.lower() == category.lower()]
-    )
+    return summarize([exp for exp in expenses if exp.category.lower() == category.lower()])
 
 
 @router.put("/{expense_id}", response_model=Expense)
