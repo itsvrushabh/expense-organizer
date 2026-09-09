@@ -71,5 +71,6 @@ async def start_currency_sync_worker():
             await sync_currency_rates()
     except asyncio.CancelledError:
         logger.info("Currency auto-sync background worker cancelled.")
+        raise
     except Exception as e:
         logger.error("Unexpected error in currency sync worker: %s", e)
