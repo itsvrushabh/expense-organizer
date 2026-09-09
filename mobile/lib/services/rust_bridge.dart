@@ -247,11 +247,12 @@ class RustBridge {
       final urlPtr = apiUrl.toNativeUtf8();
       try {
         final resPtr = _rustSyncQueue!(pathPtr, urlPtr);
-        if (resPtr == nullptr)
+        if (resPtr == nullptr) {
           return {
             'success': false,
             'errors': ['Null pointer result'],
           };
+        }
         final jsonStr = resPtr.toDartString();
         _rustFreeString!(resPtr);
 
