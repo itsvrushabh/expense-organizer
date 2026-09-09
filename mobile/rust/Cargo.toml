@@ -1,0 +1,20 @@
+[package]
+name = "expense_sync_engine"
+version = "0.1.0"
+edition = "2021"
+description = "High reliability offline queue and sync engine for Expense Organizer mobile app"
+
+[lib]
+name = "expense_sync_engine"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+ureq = { version = "2.10", default-features = false, features = ["json", "tls"] }
+uuid = { version = "1.10", features = ["v4", "fast-rng", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3.10"

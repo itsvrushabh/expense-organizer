@@ -34,7 +34,7 @@ function App() {
       if (viewMode === 'day') {
         path = `/expenses/day/${toDateInput(selectedDate)}`
       } else if (viewMode === 'week') {
-        path = '/expenses'
+        path = `/expenses/week/date/${toDateInput(selectedDate)}?start_sunday=true`
       } else if (viewMode === 'month') {
         path = `/expenses/month/${selectedDate.getFullYear()}/${selectedDate.getMonth() + 1}`
       } else {

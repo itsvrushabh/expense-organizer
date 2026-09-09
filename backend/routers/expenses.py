@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from typing import List
 
 from fastapi import APIRouter, HTTPException, Path
@@ -13,7 +13,7 @@ def summarize(expenses: List[Expense], *, sort: bool = False) -> ExpenseSummary:
     if sort:
         expenses = sorted(expenses, key=lambda x: x.date)
     return ExpenseSummary(
-        total=sum(exp.amount for exp in expenses),
+        total=round(sum(exp.amount for exp in expenses), 2),
         count=len(expenses),
         expenses=expenses,
     )
@@ -36,6 +36,40 @@ async def get_day_expenses(target_date: date):
     """Get expenses for a specific day"""
     expenses = await storage.get_all()
     return summarize([exp for exp in expenses if exp.date == target_date])
+
+
+@router.get("/week/date/{target_date}", response_model=ExpenseSummary)
+async def get_week_by_date_expenses(target_date: date, start_sunday: bool = False):
+    """Get expenses for the 7-day week containing target_date.
+    Defaults to Monday to Sunday (ISO). If start_sunday=True, computes Sunday to Saturday.
+    """
+    if start_sunday:
+        start_of_week = target_date - timedelta(days=(target_date.weekday() + 1) % 7)
+    else:
+        start_of_week = target_date - timedelta(days=target_date.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+    expenses = await storage.get_all()
+    return summarize(
+        [exp for exp in expenses if start_of_week <= exp.date <= end_of_week],
+        sort=True,
+    )
+
+
+@router.get("/week/{year}/{week}", response_model=ExpenseSummary)
+async def get_week_expenses(
+    year: int,
+    week: int = Path(..., ge=1, le=53, description="ISO week must be between 1 and 53"),
+):
+    """Get expenses for a specific ISO week"""
+    expenses = await storage.get_all()
+    return summarize(
+        [
+            exp
+            for exp in expenses
+            if exp.date.isocalendar().year == year and exp.date.isocalendar().week == week
+        ],
+        sort=True,
+    )
 
 
 @router.get("/month/{year}/{month}", response_model=ExpenseSummary)

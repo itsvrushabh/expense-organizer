@@ -63,6 +63,55 @@ def test_get_day_expenses_filters_exact_date(client, sample_payload):
     assert body["total"] == 12.0
 
 
+def test_get_week_expenses_by_iso_week(client, sample_payload):
+    # 2026-03-16 is Monday of week 12, 2026-03-22 is Sunday of week 12
+    add(client, sample_payload(date="2026-03-16", amount=15.0))
+    add(client, sample_payload(date="2026-03-20", amount=25.0))
+    add(client, sample_payload(date="2026-03-23", amount=100.0))  # week 13
+
+    body = client.get("/expenses/week/2026/12").json()
+    assert body["count"] == 2
+    assert body["total"] == 40.0
+    dates = [e["date"] for e in body["expenses"]]
+    assert dates == ["2026-03-16", "2026-03-20"]
+
+
+def test_get_week_by_date_expenses(client, sample_payload):
+    # Mid-week query Wednesday 2026-03-18 should return week 2026-03-16 to 2026-03-22
+    add(client, sample_payload(date="2026-03-16", amount=10.0))
+    add(client, sample_payload(date="2026-03-22", amount=20.0))
+    add(client, sample_payload(date="2026-03-23", amount=50.0))
+
+    body = client.get("/expenses/week/date/2026-03-18").json()
+    assert body["count"] == 2
+    assert body["total"] == 30.0
+
+
+def test_get_week_by_date_expenses_start_sunday(client, sample_payload):
+    # Wednesday 2026-03-18 with Sunday start should return week 2026-03-15 to 2026-03-21
+    add(client, sample_payload(date="2026-03-15", amount=10.0))  # Sunday
+    add(client, sample_payload(date="2026-03-21", amount=20.0))  # Saturday
+    add(client, sample_payload(date="2026-03-22", amount=50.0))  # Next Sunday
+
+    body = client.get("/expenses/week/date/2026-03-18?start_sunday=true").json()
+    assert body["count"] == 2
+    assert body["total"] == 30.0
+    dates = [e["date"] for e in body["expenses"]]
+    assert dates == ["2026-03-15", "2026-03-21"]
+
+
+def test_summarize_rounds_floating_point(client, sample_payload):
+    add(client, sample_payload(date="2026-03-15", amount=19.99))
+    add(client, sample_payload(date="2026-03-15", amount=0.01))
+    body = client.get("/expenses/day/2026-03-15").json()
+    assert body["total"] == 20.00
+
+
+def test_get_week_expenses_rejects_invalid_week(client):
+    assert client.get("/expenses/week/2026/0").status_code == 422
+    assert client.get("/expenses/week/2026/54").status_code == 422
+
+
 def test_get_month_expenses_sorted_by_date(client, sample_payload):
     add(client, sample_payload(date="2026-03-20", amount=1.0))
     add(client, sample_payload(date="2026-03-05", amount=2.0))

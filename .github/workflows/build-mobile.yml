@@ -1,0 +1,85 @@
+name: Build Mobile Apps (Android & iOS)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: 'stable'
+          cache: true
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust sync engine
+        run: |
+          cd mobile/rust
+          cargo build --release
+          cargo test
+
+      - name: Build Android APK
+        run: |
+          cd mobile
+          flutter pub get
+          flutter test
+          flutter build apk --debug
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug.apk
+          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
+
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.2'
+          channel: 'stable'
+          cache: true
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust sync engine
+        run: |
+          cd mobile/rust
+          cargo build --release
+          cargo test
+
+      - name: Build iOS (No Codesign)
+        run: |
+          cd mobile
+          flutter pub get
+          flutter test
+          flutter build ios --no-codesign --simulator
+
+      - name: Upload iOS App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-runner-app
+          path: mobile/build/ios/iphonesimulator/Runner.app

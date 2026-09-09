@@ -2,45 +2,53 @@
 
 ## What's Been Built
 
-A full-stack expense tracking application with:
-- **Backend**: Async FastAPI with CORS support
-- **Frontend**: Bun + React with Excel-style expense views
-- **Docker**: Complete containerization with docker-compose
+A full-stack, cross-platform expense tracking application with:
+- **Backend**: Async FastAPI with Day/Week/Month/Year aggregations, CORS, and Pydantic validation
+- **Frontend**: Bun + React 19 + TypeScript with Excel spreadsheet grids, spend heatmaps, and multi-currency
+- **Mobile**: Flutter + Rust C-FFI native offline queue engine (`mobile/`)
+- **Docker**: Multi-container Docker setup with docker-compose
 
 ## Project Structure
 
 ```
 expense-organizer/
-├── main.py                      # uvicorn entry (re-exports app)
-├── app/                         # FastAPI package
-│   ├── main.py                  # App factory + CORS
-│   ├── models.py
-│   ├── storage.py
-│   └── routers/expenses.py
-├── requirements.txt
-├── Dockerfile
-├── .dockerignore
+├── .github/
+│   └── workflows/build-mobile.yml # CI/CD for Android & iOS
+├── backend/
+│   ├── main.py                   # App factory + CORS + endpoint catalog
+│   ├── models.py                 # Pydantic schemas (Expense, ExpenseSummary)
+│   ├── storage.py                # In-memory data store
+│   ├── routers/expenses.py       # REST route handlers & aggregations
+│   ├── tests/                    # 34 pytest unit & integration tests
+│   ├── Dockerfile
+│   └── requirements.txt
+├── frontend/
+│   ├── index.ts                  # Bun server + /api proxy
+│   ├── index.html
+│   ├── package.json
+│   ├── Dockerfile
+│   └── src/
+│       ├── main.tsx
+│       ├── App.tsx               # Shell: controls, currency, view switcher
+│       ├── api.ts                # Typed fetch client (hits /api)
+│       ├── currency.ts           # Multi-currency live converter
+│       ├── colors.ts             # Golden-ratio category colors
+│       ├── types.ts
+│       ├── dates.ts
+│       └── views/
+│           ├── DayExcelView.tsx  # Day view with inline entry form
+│           ├── ExcelGridView.tsx # Weekly Excel spreadsheet table
+│           └── Grid6x6View.tsx   # Month/Year spend heatmap grid
+├── mobile/
+│   ├── lib/                      # Flutter Material 3 client matching Web UI
+│   ├── rust/                     # High-reliability offline queue engine (C-FFI)
+│   ├── test/                     # Flutter test suite
+│   └── android/ ios/ linux/      # Platform build configs
+├── scripts/
+│   └── add_recurring_expenses.py # Seeding script for recurring expenses
 ├── docker-compose.yml
 ├── start.sh
-├── README.md
-└── frontend/
-    ├── index.ts                 # Bun server + /api proxy
-    ├── index.html
-    ├── package.json
-    ├── Dockerfile
-    ├── .dockerignore
-    ├── .env.example
-    └── src/
-        ├── main.tsx
-        ├── App.tsx
-        ├── api.ts
-        ├── types.ts
-        ├── dates.ts
-        ├── App.css
-        ├── index.css
-        └── views/
-            ├── DayExcelView.tsx
-            └── ExcelGridView.tsx
+└── README.md
 ```
 
 ## Quick Start
@@ -63,10 +71,11 @@ docker-compose up -d --build
 
 **Backend:**
 ```bash
+cd backend
 python -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-python main.py
+pip install -r requirements.txt -r requirements-dev.txt
+uvicorn main:app --reload --port 8000
 ```
 
 **Frontend:**
@@ -74,6 +83,12 @@ python main.py
 cd frontend
 bun install
 bun run dev
+```
+
+**Mobile (Flutter + Rust):**
+```bash
+cd mobile
+flutter run
 ```
 
 ## Access Points

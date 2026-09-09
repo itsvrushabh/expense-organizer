@@ -24,6 +24,8 @@ def create_app() -> FastAPI:
                 "add_expense": "POST /expenses",
                 "all_expenses": "GET /expenses",
                 "day_expenses": "GET /expenses/day/{date}",
+                "week_expenses": "GET /expenses/week/{year}/{week}",
+                "week_date_expenses": "GET /expenses/week/date/{date}",
                 "month_expenses": "GET /expenses/month/{year}/{month}",
                 "year_expenses": "GET /expenses/year/{year}",
                 "category_expenses": "GET /expenses/category/{category}",
