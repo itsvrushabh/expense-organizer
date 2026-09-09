@@ -19,3 +19,4 @@ htmlcov/
 *.gguf
 expense-helper/mobile/ios/*
 expense-helper/mobile/android/*
+frontend/bun.lock
