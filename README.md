@@ -129,6 +129,65 @@ cd frontend
 bun x tsc --noEmit
 ```
 
+## GitHub Workflow Status and Releases
+
+The repository uses GitHub Actions for continuous validation and releases:
+
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| `CI` | Every pushed commit on every branch, pull requests, and manual runs | Python, frontend, Flutter, Rust, formatting, linting, type checks, tests, Docker configuration, and lightweight service probes |
+| `Release` | `vMAJOR.MINOR.PATCH` tags and manual runs | Android APKs, unsigned iOS IPAs, Docker image publishing, and GitHub Release attachments |
+| `Dependabot` | Weekly schedule | Dependency update pull requests for Python, Bun/npm, Flutter/Dart, Cargo, Docker, and GitHub Actions |
+
+The required `ci-success` job is the branch-protection gate. It always runs after the
+fast checks and service checks, and fails if a required job fails, is cancelled, or is
+unexpectedly skipped. Configure the repository's branch protection rules to require
+`ci-success` before merging.
+
+### Checks by Area
+
+- Python services run pytest plus pinned Ruff formatting and lint checks.
+- The web frontend uses the committed `frontend/bun.lock`, pinned Biome formatting/lint
+    checks, and TypeScript type checking.
+- Both Flutter applications run `dart format`, `flutter analyze`, and `flutter test`.
+- The Rust offline queue runs `cargo fmt`, strict Clippy, and `cargo test`.
+- Service checks build and start only the backend/frontend path on every branch push. They
+    probe the frontend, API proxy, and expense endpoint, collect logs, and always clean up.
+- GGUF model-backed checks are not part of every commit because model weights and GPU
+    support are not available on standard GitHub-hosted runners.
+
+### Release Artifacts and Permissions
+
+Push a tag such as `v1.2.3` to start a release:
+
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+The release workflow builds APK and unsigned IPA artifacts for both mobile applications,
+publishes the four service images to GitHub Container Registry, and attaches the mobile
+files to the GitHub Release. Temporary workflow artifacts are retained for seven days.
+Signed iOS builds require Apple signing credentials and are not required for ordinary CI.
+
+Workflow permissions are explicit: CI has read-only repository access, while the release
+workflow alone has `contents: write` and `packages: write` for GitHub Releases and GHCR.
+Do not expose release secrets to pull requests from forks.
+
+### Inspecting Status
+
+Use the Actions tab to inspect a run, or use the GitHub CLI:
+
+```bash
+gh run list --workflow CI
+gh run view RUN_ID --log-failed
+gh run list --workflow Release
+```
+
+Dependabot groups patch and minor updates by ecosystem. Major upgrades remain separate so
+they can be reviewed with any required migration work. Keep `frontend/bun.lock`, Flutter
+lockfiles, and `mobile/rust/Cargo.lock` committed when dependencies change.
+
 ---
 
 ## API Summary
@@ -177,7 +236,9 @@ expense-organizer/
 │   ├── expense-helper-desktop.md # Desktop roadmap (on hold)
 │   └── setup.md                  # Deployment & setup walkthrough
 ├── .github/
-│   └── workflows/build-mobile.yml # CI/CD for Android & iOS builds
+│   ├── workflows/ci.yml            # Branch and pull-request checks
+│   ├── workflows/release.yml       # Tagged mobile and container releases
+│   └── dependabot.yml              # Weekly dependency updates
 ├── backend/                      # Pure REST core backend (internal port 8000)
 │   ├── main.py                   # Pure REST app factory, CORS, endpoint catalog
 │   ├── models.py                 # Pydantic schemas (Expense, ExpenseSummary)
@@ -199,6 +260,7 @@ expense-organizer/
 │   └── requirements.txt
 ├── frontend/
 │   ├── index.ts                  # Bun HTTP server & /api reverse proxy
+│   ├── bun.lock                   # Committed frontend dependency lockfile
 │   ├── src/                      # React 19 TypeScript application
 │   ├── package.json
 │   └── Dockerfile

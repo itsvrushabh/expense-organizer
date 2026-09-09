@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v*.*.*"
   workflow_dispatch:
 
 permissions:
@@ -19,8 +19,21 @@ env:
   IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/expense-organizer
 
 jobs:
+  validate-tag:
+    name: Validate release tag
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require semantic version tag
+        if: github.ref_type == 'tag'
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
   android:
     name: Android release (${{ matrix.app }})
+    needs: validate-tag
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -53,6 +66,7 @@ jobs:
 
   ios:
     name: iOS release (${{ matrix.app }})
+    needs: validate-tag
     runs-on: macos-14
     strategy:
       fail-fast: false
@@ -85,6 +99,7 @@ jobs:
 
   docker:
     name: Publish Docker images
+    needs: validate-tag
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -117,6 +132,7 @@ jobs:
     name: Attach mobile artifacts to GitHub release
     if: github.ref_type == 'tag'
     needs:
+      - validate-tag
       - android
       - ios
       - docker
