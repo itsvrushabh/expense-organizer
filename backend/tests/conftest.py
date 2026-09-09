@@ -5,12 +5,12 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture(autouse=True)
 def clean_storage():
-    """Reset in-memory storage before and after every test."""
-    storage._expenses.clear()
-    storage._next_id = 1
+    """Reset storage before and after every test."""
+    storage._pool = None
+    storage.reset_in_memory()
     yield
-    storage._expenses.clear()
-    storage._next_id = 1
+    storage._pool = None
+    storage.reset_in_memory()
 
 
 @pytest.fixture

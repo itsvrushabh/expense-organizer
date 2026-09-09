@@ -55,6 +55,7 @@ class RustBridge {
   _RustSyncQueueDart? _rustSyncQueue;
   _RustGetCountDart? _rustClearSynced;
 
+  RustBridge();
   RustBridge._internal();
 
   bool get isNativeAvailable => _dylib != null;
