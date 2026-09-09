@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../models/expense.dart';
 import '../models/queue_item.dart';
 import '../utils/colors.dart';
@@ -52,7 +53,10 @@ class Grid6x6View extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -64,7 +68,9 @@ class Grid6x6View extends StatelessWidget {
 
               // Items
               ConstrainedBox(
-                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.45),
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.45,
+                ),
                 child: ListView(
                   shrinkWrap: true,
                   children: [
@@ -73,26 +79,54 @@ class Grid6x6View extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Text(
                           'OFFLINE QUEUE (${pendingItems.length})',
-                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.amber.shade900),
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.amber.shade900,
+                          ),
                         ),
                       ),
                       ...pendingItems.map((item) {
                         final color = categoryColor(item.category);
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: Text(item.description, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          title: Text(
+                            item.description,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                           subtitle: Row(
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(color: color.bg, borderRadius: BorderRadius.circular(4)),
-                                child: Text(item.category, style: TextStyle(color: color.fg, fontSize: 11)),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: color.bg,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  item.category,
+                                  style: TextStyle(
+                                    color: color.fg,
+                                    fontSize: 11,
+                                  ),
+                                ),
                               ),
                               const SizedBox(width: 6),
-                              const Text('⏳ Pending sync', style: TextStyle(fontSize: 11, color: Colors.amber)),
+                              const Text(
+                                '⏳ Pending sync',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.amber,
+                                ),
+                              ),
                             ],
                           ),
-                          trailing: Text(currency.format(item.amount), style: const TextStyle(fontWeight: FontWeight.bold)),
+                          trailing: Text(
+                            currency.format(item.amount),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         );
                       }),
                       const Divider(),
@@ -107,17 +141,32 @@ class Grid6x6View extends StatelessWidget {
                         final color = categoryColor(exp.category);
                         return ListTile(
                           contentPadding: EdgeInsets.zero,
-                          title: Text(exp.description, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          title: Text(
+                            exp.description,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
                           subtitle: Container(
                             alignment: Alignment.centerLeft,
                             child: Container(
                               margin: const EdgeInsets.only(top: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: color.bg, borderRadius: BorderRadius.circular(4)),
-                              child: Text(exp.category, style: TextStyle(color: color.fg, fontSize: 11)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: color.bg,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                exp.category,
+                                style: TextStyle(color: color.fg, fontSize: 11),
+                              ),
                             ),
                           ),
-                          trailing: Text(currency.format(exp.amount), style: const TextStyle(fontWeight: FontWeight.bold)),
+                          trailing: Text(
+                            currency.format(exp.amount),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         );
                       }),
                     ],
@@ -130,10 +179,17 @@ class Grid6x6View extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Grand Total', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'Grand Total',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                   Text(
                     currency.format(grandTotal),
-                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.green,
+                    ),
                   ),
                 ],
               ),
@@ -150,7 +206,8 @@ class Grid6x6View extends StatelessWidget {
       byCat[e.category] = (byCat[e.category] ?? 0.0) + e.amount;
     }
 
-    final sorted = byCat.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sorted = byCat.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
 
     return sorted.map((entry) {
       final color = categoryColor(entry.key);
@@ -160,12 +217,25 @@ class Grid6x6View extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: color.bg, borderRadius: BorderRadius.circular(6)),
-              child: Text(entry.key, style: TextStyle(color: color.fg, fontWeight: FontWeight.bold, fontSize: 12)),
+              decoration: BoxDecoration(
+                color: color.bg,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                entry.key,
+                style: TextStyle(
+                  color: color.fg,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
             ),
           ],
         ),
-        trailing: Text(currency.format(entry.value), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+        trailing: Text(
+          currency.format(entry.value),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+        ),
       );
     }).toList();
   }
@@ -173,7 +243,9 @@ class Grid6x6View extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isMonth = mode == 'month';
-    final count = isMonth ? DateUtils.getDaysInMonth(selectedDate.year, selectedDate.month) : 12;
+    final count = isMonth
+        ? DateUtils.getDaysInMonth(selectedDate.year, selectedDate.month)
+        : 12;
 
     // Bucket expenses
     final Map<int, List<Expense>> buckets = {};
@@ -211,7 +283,10 @@ class Grid6x6View extends StatelessWidget {
     double maxCellTotal = 0.0;
     for (int i = 1; i <= count; i++) {
       final sTotal = (buckets[i] ?? []).fold(0.0, (s, e) => s + e.amount);
-      final pTotal = (pendingBuckets[i] ?? []).fold(0.0, (s, e) => s + e.amount);
+      final pTotal = (pendingBuckets[i] ?? []).fold(
+        0.0,
+        (s, e) => s + e.amount,
+      );
       final sum = sTotal + pTotal;
       if (sum > maxCellTotal) maxCellTotal = sum;
     }
@@ -219,7 +294,9 @@ class Grid6x6View extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final crossAxisCount = isMonth
-            ? (constraints.maxWidth > 600 ? 7 : (constraints.maxWidth > 400 ? 5 : 4))
+            ? (constraints.maxWidth > 600
+                  ? 7
+                  : (constraints.maxWidth > 400 ? 5 : 4))
             : (constraints.maxWidth > 600 ? 4 : 3);
 
         return GridView.builder(
@@ -243,9 +320,14 @@ class Grid6x6View extends StatelessWidget {
             final entriesCount = serverData.length + pendingData.length;
 
             final hasData = entriesCount > 0;
-            final label = isMonth ? key.toString() : DateFormat('MMMM').format(DateTime(selectedDate.year, key, 1));
+            final label = isMonth
+                ? key.toString()
+                : DateFormat('MMMM')
+                      .format(DateTime(selectedDate.year, key, 1));
             final title = isMonth
-                ? DateFormat('EEEE, dd MMM yyyy').format(DateTime(selectedDate.year, selectedDate.month, key))
+                ? DateFormat(
+                    'EEEE, dd MMM yyyy',
+                  ).format(DateTime(selectedDate.year, selectedDate.month, key))
                 : '$label ${selectedDate.year}';
 
             // Heat map color calculation
@@ -255,12 +337,27 @@ class Grid6x6View extends StatelessWidget {
             if (hasData && maxCellTotal > 0) {
               final ratio = (cellTotal / maxCellTotal).clamp(0.0, 1.0);
               // Violet/indigo heat scale matching web UI
-              cellBg = Color.lerp(const Color(0xFFF5F3FF), const Color(0xFFDDD6FE), ratio)!;
-              borderColor = Color.lerp(const Color(0xFFC4B5FD), const Color(0xFF8B5CF6), ratio)!;
+              cellBg = Color.lerp(
+                const Color(0xFFF5F3FF),
+                const Color(0xFFDDD6FE),
+                ratio,
+              )!;
+              borderColor = Color.lerp(
+                const Color(0xFFC4B5FD),
+                const Color(0xFF8B5CF6),
+                ratio,
+              )!;
             }
 
             return InkWell(
-              onTap: hasData ? () => _openDetailSheet(context, title, serverData, pendingData) : null,
+              onTap: hasData
+                  ? () => _openDetailSheet(
+                      context,
+                      title,
+                      serverData,
+                      pendingData,
+                    )
+                  : null,
               borderRadius: BorderRadius.circular(12),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
@@ -268,11 +365,15 @@ class Grid6x6View extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: cellBg,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: borderColor, width: hasData ? 1.5 : 1.0),
+                  border: Border.all(
+                    color: borderColor,
+                    width: hasData ? 1.5 : 1.0,
+                  ),
                   boxShadow: hasData
                       ? [
                           BoxShadow(
-                            color: const Color(0xFF6366F1).withValues(alpha: 0.12),
+                            color: const Color(0xFF6366F1)
+                                .withValues(alpha: 0.12),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -287,7 +388,9 @@ class Grid6x6View extends StatelessWidget {
                       style: TextStyle(
                         fontSize: isMonth ? 16 : 14,
                         fontWeight: FontWeight.bold,
-                        color: hasData ? const Color(0xFF1E293B) : Colors.grey.shade400,
+                        color: hasData
+                            ? const Color(0xFF1E293B)
+                            : Colors.grey.shade400,
                       ),
                     ),
                     if (hasData) ...[
@@ -305,7 +408,10 @@ class Grid6x6View extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         '$entriesCount ${entriesCount == 1 ? 'entry' : 'entries'}',
-                        style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     ],
                   ],

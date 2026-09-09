@@ -1,7 +1,7 @@
-use std::time::Duration;
+use crate::queue::QueueManager;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use crate::queue::QueueManager;
+use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SyncResult {
@@ -74,7 +74,9 @@ pub fn sync_pending_queue(queue_manager: &QueueManager, api_url: &str) -> SyncRe
         match agent.post(&post_endpoint).send_json(payload) {
             Ok(res) if (200..300).contains(&res.status()) => {
                 if let Err(e) = queue_manager.mark_synced(&item.id) {
-                    errors.push(format!("Synced on server but failed to update local state: {e}"));
+                    errors.push(format!(
+                        "Synced on server but failed to update local state: {e}"
+                    ));
                 }
                 synced += 1;
             }

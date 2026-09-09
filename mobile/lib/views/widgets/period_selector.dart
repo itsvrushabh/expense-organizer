@@ -39,7 +39,9 @@ class PeriodSelector extends StatelessWidget {
         onDateChanged(selectedDate.add(Duration(days: 7 * delta)));
         break;
       case PeriodType.month:
-        onDateChanged(DateTime(selectedDate.year, selectedDate.month + delta, 1));
+        onDateChanged(
+          DateTime(selectedDate.year, selectedDate.month + delta, 1),
+        );
         break;
       case PeriodType.year:
         onDateChanged(DateTime(selectedDate.year + delta, 1, 1));
@@ -52,7 +54,9 @@ class PeriodSelector extends StatelessWidget {
       case PeriodType.day:
         return DateFormat('EEE, MMM d, yyyy').format(selectedDate);
       case PeriodType.week:
-        final monday = selectedDate.subtract(Duration(days: selectedDate.weekday - 1));
+        final monday = selectedDate.subtract(
+          Duration(days: selectedDate.weekday - 1),
+        );
         final sunday = monday.add(const Duration(days: 6));
         final week = isoWeekNumber(selectedDate);
         return 'Week $week (${DateFormat('MMM d').format(monday)} - ${DateFormat('MMM d').format(sunday)})';
@@ -84,9 +88,7 @@ class PeriodSelector extends StatelessWidget {
               if (set.isNotEmpty) onPeriodChanged(set.first);
             },
             showSelectedIcon: false,
-            style: const ButtonStyle(
-              visualDensity: VisualDensity.compact,
-            ),
+            style: const ButtonStyle(visualDensity: VisualDensity.compact),
           ),
         ),
 
@@ -115,7 +117,10 @@ class PeriodSelector extends StatelessWidget {
                     },
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -129,7 +134,11 @@ class PeriodSelector extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                          const Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: Colors.grey,
+                          ),
                         ],
                       ),
                     ),

@@ -1,12 +1,21 @@
 from datetime import date, timedelta
 from typing import List, Optional
-
 from fastapi import APIRouter, HTTPException, Path, Query
-
 import storage
+from fastapi import APIRouter, HTTPException, Path
 from models import Expense, ExpenseCreate, ExpenseSummary
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
+
+
+def summarize(expenses: list[Expense], *, sort: bool = False) -> ExpenseSummary:
+    if sort:
+        expenses = sorted(expenses, key=lambda x: x.date)
+    return ExpenseSummary(
+        total=round(sum(exp.amount for exp in expenses), 2),
+        count=len(expenses),
+        expenses=expenses,
+    )
 
 
 @router.post("", response_model=Expense)

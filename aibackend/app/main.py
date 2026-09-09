@@ -1,19 +1,20 @@
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import HOST, PORT, AIMODEL_URL, EXPENSE_API_URL
+from app.config import AIMODEL_URL, EXPENSE_API_URL, HOST, PORT
+from app.expense_client import check_backend_health
+from app.model_client import ModelClient
 from app.schemas import (
+    ActionRequest,
     ChatRequest,
     ChatResponse,
-    ActionRequest,
     HealthResponse,
 )
-from app.tools import TOOLS_SCHEMA
-from app.model_client import ModelClient
-from app.expense_client import check_backend_health
 from app.session import SessionManager
+from app.tools import TOOLS_SCHEMA
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("aibackend")
@@ -26,7 +27,11 @@ session_manager: SessionManager = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global model_client, session_manager
-    logger.info("Initializing aibackend service (AIMODEL_URL=%s, EXPENSE_API_URL=%s)...", AIMODEL_URL, EXPENSE_API_URL)
+    logger.info(
+        "Initializing aibackend service (AIMODEL_URL=%s, EXPENSE_API_URL=%s)...",
+        AIMODEL_URL,
+        EXPENSE_API_URL,
+    )
     model_client = ModelClient(aimodel_url=AIMODEL_URL)
     session_manager = SessionManager(model_client=model_client)
     yield
@@ -68,7 +73,11 @@ def create_app() -> FastAPI:
 
     @application.get("/health", response_model=HealthResponse)
     async def health():
-        aimodel_h = await model_client.check_aimodel_health() if model_client else {"status": "uninitialized"}
+        aimodel_h = (
+            await model_client.check_aimodel_health()
+            if model_client
+            else {"status": "uninitialized"}
+        )
         backend_h = await check_backend_health()
 
         aimodel_ok = aimodel_h.get("status") == "reachable"
@@ -117,4 +126,5 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("app.main:app", host=HOST, port=PORT, reload=True)

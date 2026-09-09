@@ -1,14 +1,14 @@
 import logging
 import os
 import time
-from typing import Optional, List, Dict, Any
+from typing import Any
 
-from app.config import MODEL_PATH, N_GPU_LAYERS, N_CTX
+from app.config import MODEL_PATH, N_CTX, N_GPU_LAYERS
 from app.schemas import (
-    ChatMessage,
+    ChatCompletionChoice,
     ChatCompletionRequest,
     ChatCompletionResponse,
-    ChatCompletionChoice,
+    ChatMessage,
     CompletionRequest,
     CompletionResponse,
     HealthResponse,
@@ -24,7 +24,7 @@ class ModelServer:
     Provides raw inference API without business logic or tools execution.
     """
 
-    def __init__(self, model_path: Optional[str] = None, n_gpu_layers: Optional[int] = None):
+    def __init__(self, model_path: str | None = None, n_gpu_layers: int | None = None):
         self.model_path = model_path or MODEL_PATH
         self.n_gpu_layers = n_gpu_layers if n_gpu_layers is not None else N_GPU_LAYERS
         self.llm = None
@@ -34,7 +34,10 @@ class ModelServer:
 
     def _initialize_model(self):
         if not os.path.exists(self.model_path):
-            logger.warning("Model file not found at '%s'. Model server running in mock/standby mode.", self.model_path)
+            logger.warning(
+                "Model file not found at '%s'. Model server running in mock/standby mode.",
+                self.model_path,
+            )
             self.model_loaded = False
             return
 
@@ -73,7 +76,9 @@ class ModelServer:
 
         if not self.model_loaded or self.llm is None:
             # Standby/Mock response if model file is not present
-            logger.warning("Chat completion requested but model is not loaded. Returning fallback message.")
+            logger.warning(
+                "Chat completion requested but model is not loaded. Returning fallback message."
+            )
             return ChatCompletionResponse(
                 id=f"chatcmpl-{created_ts}",
                 created=created_ts,
@@ -90,7 +95,7 @@ class ModelServer:
                 ],
             )
 
-        kwargs: Dict[str, Any] = {
+        kwargs: dict[str, Any] = {
             "messages": messages_dicts,
             "temperature": request.temperature,
             "max_tokens": request.max_tokens,
@@ -148,7 +153,7 @@ class ModelServer:
 
 
 # Global singleton
-_model_server: Optional[ModelServer] = None
+_model_server: ModelServer | None = None
 
 
 def get_model_server() -> ModelServer:

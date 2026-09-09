@@ -6,10 +6,10 @@ WORKDIR /app
 COPY package.json bun.lock* ./
 
 # Install dependencies
-RUN bun install
+RUN bun install --frozen-lockfile
 
 # Copy application files
-# COPY . .
+COPY . .
 
 # Expose port
 EXPOSE 3000

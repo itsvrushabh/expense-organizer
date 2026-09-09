@@ -1,0 +1,42 @@
+name: CI / Flutter
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-flutter-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: ${{ matrix.app }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - mobile
+          - expense-helper/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Get packages
+        working-directory: ${{ matrix.app }}
+        run: flutter pub get
+      - name: Check Dart formatting
+        working-directory: ${{ matrix.app }}
+        run: dart format --output=none --set-exit-if-changed .
+      - name: Analyze
+        working-directory: ${{ matrix.app }}
+        run: flutter analyze
+      - name: Test
+        working-directory: ${{ matrix.app }}
+        run: flutter test

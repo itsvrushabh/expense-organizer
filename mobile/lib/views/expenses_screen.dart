@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../models/expense_summary.dart';
 import '../models/queue_item.dart';
 import '../services/sync_service.dart';
@@ -67,7 +68,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           summary = await api.fetchWeekExpenses(_selectedDate.year, week);
           break;
         case PeriodType.month:
-          summary = await api.fetchMonthExpenses(_selectedDate.year, _selectedDate.month);
+          summary = await api.fetchMonthExpenses(
+            _selectedDate.year,
+            _selectedDate.month,
+          );
           break;
         case PeriodType.year:
           summary = await api.fetchYearExpenses(_selectedDate.year);
@@ -104,7 +108,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         final itemWeek = PeriodSelector.isoWeekNumber(parsed);
         return parsed.year == _selectedDate.year && itemWeek == week;
       case PeriodType.month:
-        return parsed.year == _selectedDate.year && parsed.month == _selectedDate.month;
+        return parsed.year == _selectedDate.year &&
+            parsed.month == _selectedDate.month;
       case PeriodType.year:
         return parsed.year == _selectedDate.year;
     }
@@ -112,12 +117,18 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   List<QueueItem> _getMatchingPendingItems() {
     return widget.syncService.queueItems
-        .where((item) => (item.isPending || item.isFailed) && _itemMatchesPeriod(item.date))
+        .where(
+          (item) =>
+              (item.isPending || item.isFailed) &&
+              _itemMatchesPeriod(item.date),
+        )
         .toList();
   }
 
   void _showSettingsDialog() {
-    final controller = TextEditingController(text: widget.syncService.apiService.baseUrl);
+    final controller = TextEditingController(
+      text: widget.syncService.apiService.baseUrl,
+    );
 
     showDialog(
       context: context,
@@ -172,7 +183,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   @override
   Widget build(BuildContext context) {
     final matchingPending = _getMatchingPendingItems();
-    final pendingTotal = matchingPending.fold<double>(0.0, (sum, i) => sum + i.amount);
+    final pendingTotal = matchingPending.fold<double>(
+      0.0,
+      (sum, i) => sum + i.amount,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -264,7 +278,9 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_errorMessage != null && !widget.syncService.isOnline && matchingPending.isEmpty) {
+    if (_errorMessage != null &&
+        !widget.syncService.isOnline &&
+        matchingPending.isEmpty) {
       return ListView(
         children: [
           const SizedBox(height: 40),
@@ -337,7 +353,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             child: Row(
               children: [
-                Icon(Icons.access_time_filled, size: 14, color: Colors.amber.shade900),
+                Icon(
+                  Icons.access_time_filled,
+                  size: 14,
+                  color: Colors.amber.shade900,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   'PENDING SYNC (${matchingPending.length})',

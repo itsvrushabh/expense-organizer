@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'services/sync_service.dart';
 import 'views/web_style_app_screen.dart';
 
@@ -27,10 +28,7 @@ class ExpenseOrganizerMobileApp extends StatelessWidget {
           seedColor: const Color(0xFF6366F1), // Indigo
           brightness: Brightness.light,
         ),
-        appBarTheme: const AppBarTheme(
-          centerTitle: false,
-          elevation: 0,
-        ),
+        appBarTheme: const AppBarTheme(centerTitle: false, elevation: 0),
         cardTheme: CardThemeData(
           elevation: 0,
           shape: RoundedRectangleBorder(

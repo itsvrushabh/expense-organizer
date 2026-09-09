@@ -1,10 +1,3 @@
-from datetime import date
-
-from models import ExpenseCreate
-
-import storage
-
-
 def add(client, payload):
     response = client.post("/expenses", json=payload)
     assert response.status_code == 200
@@ -165,9 +158,10 @@ def test_get_category_expenses_case_insensitive(client, sample_payload):
 def test_update_expense(client, sample_payload):
     created = add(client, sample_payload())
 
-    response = client.put(f"/expenses/{created['id']}", json=sample_payload(
-        description="Dinner", amount=88.0, category="Food", date="2026-03-20"
-    ))
+    response = client.put(
+        f"/expenses/{created['id']}",
+        json=sample_payload(description="Dinner", amount=88.0, category="Food", date="2026-03-20"),
+    )
     assert response.status_code == 200
     body = response.json()
     assert body["id"] == created["id"]

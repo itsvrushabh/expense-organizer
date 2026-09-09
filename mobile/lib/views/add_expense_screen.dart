@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../services/sync_service.dart';
 
 class AddExpenseScreen extends StatefulWidget {
@@ -48,7 +49,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final amount = double.tryParse(_amountController.text.trim());
     if (amount == null || amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid amount greater than 0')),
+        const SnackBar(
+          content: Text('Please enter a valid amount greater than 0'),
+        ),
       );
       return;
     }
@@ -74,7 +77,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ? 'Server offline: Expense queued locally. Will push when online.'
                 : 'Expense added to server successfully!',
           ),
-          backgroundColor: isQueued ? Colors.amber.shade800 : Colors.green.shade700,
+          backgroundColor: isQueued
+              ? Colors.amber.shade800
+              : Colors.green.shade700,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -97,9 +102,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Expense'),
-      ),
+      appBar: AppBar(title: const Text('Add Expense')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
@@ -111,17 +114,23 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: isOnline ? Colors.green.shade50 : Colors.deepOrange.shade50,
+                  color: isOnline
+                      ? Colors.green.shade50
+                      : Colors.deepOrange.shade50,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isOnline ? Colors.green.shade300 : Colors.deepOrange.shade300,
+                    color: isOnline
+                        ? Colors.green.shade300
+                        : Colors.deepOrange.shade300,
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       isOnline ? Icons.cloud_done : Icons.cloud_off,
-                      color: isOnline ? Colors.green.shade700 : Colors.deepOrange.shade700,
+                      color: isOnline
+                          ? Colors.green.shade700
+                          : Colors.deepOrange.shade700,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -131,7 +140,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                             : 'Server is offline. Expense will be stored in offline queue and pushed automatically when online.',
                         style: TextStyle(
                           fontSize: 12.5,
-                          color: isOnline ? Colors.green.shade900 : Colors.deepOrange.shade900,
+                          color: isOnline
+                              ? Colors.green.shade900
+                              : Colors.deepOrange.shade900,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -165,7 +176,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               // Amount
               TextFormField(
                 controller: _amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Amount',
                   hintText: '0.00',
@@ -217,7 +230,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               // Category selector
               Text(
                 'Category',
-                style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Wrap(
@@ -250,14 +265,20 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : Icon(isOnline ? Icons.check_circle_outline : Icons.queue),
                 label: Text(
                   _isSaving
                       ? 'Saving...'
                       : (isOnline ? 'Add Expense' : 'Add to Offline Queue'),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
