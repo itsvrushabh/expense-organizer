@@ -125,13 +125,13 @@ Every commit pushed to any branch and every pull request runs the CI sub-workflo
 and Ruff formatting/linting, frontend TypeScript and Biome checks, both Flutter
 applications, the Rust engine, Docker configuration, and lightweight service probes.
 
-`ci-success.yml` runs after the sub-workflows complete and provides the aggregate
-branch-protection check. Require the displayed `CI / Success / ci-success` check in the
-repository branch rules.
+`ci-success.yml` starts with the sub-workflows, polls their exact commit and event until
+they complete, and provides the aggregate branch-protection check. Require the displayed
+`CI / Success / ci-success` check in the repository branch rules.
 
-`ci-services.yml` runs lightweight backend/frontend Docker startup probes. The full model
-health check is not part of every commit because it requires the GGUF model artifact and
-is not suitable for standard GitHub-hosted runners.
+`ci-services.yml` runs lightweight backend/frontend Docker startup probes. Model health is
+not currently run by CI or release publishing because it requires the GGUF model artifact
+and GPU support; mount the model separately when deploying `aimodel`.
 
 Version tags matching `vMAJOR.MINOR.PATCH` trigger `.github/workflows/release.yml`. The
 release workflow builds preview Android APKs and unsigned iOS IPAs for both mobile

@@ -72,6 +72,7 @@ jobs:
         with:
           name: ${{ matrix.artifact }}-${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}-preview
           path: ${{ matrix.directory }}/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
           retention-days: 7
 
   ios:
@@ -113,6 +114,7 @@ jobs:
         with:
           name: ${{ matrix.artifact }}-${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}-unsigned-preview
           path: ${{ matrix.directory }}/build/ios/ipa/*.ipa
+          if-no-files-found: error
           retention-days: 7
 
   docker:

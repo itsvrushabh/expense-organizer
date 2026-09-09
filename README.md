@@ -146,7 +146,7 @@ to open the complete workflow history, including every branch, commit, job, and 
 | `CI / Flutter` | [![Flutter CI status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-flutter.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-flutter.yml) | Every pushed commit, pull request, and manual run | Both Flutter applications: Dart format, analyze, and tests |
 | `CI / Rust` | [![Rust CI status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-rust.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-rust.yml) | Every pushed commit, pull request, and manual run | rustfmt, Clippy, and native queue tests |
 | `CI / Services` | [![Services CI status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-services.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/ci-services.yml) | Every pushed commit, pull request, and manual run | Compose validation, Docker startup, API proxy, and service health probes |
-| `Release` | [![Release status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/release.yml) | `vMAJOR.MINOR.PATCH` tags and manual runs | Android APKs, unsigned iOS IPAs, Docker image publishing, and GitHub Release attachments |
+| `Release` | [![Release status](https://github.com/itsvrushabh/expense-organizer/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/itsvrushabh/expense-organizer/actions/workflows/release.yml) | `vMAJOR.MINOR.PATCH` tags and manual validation runs | Tag builds publish Android APK previews, unsigned iOS IPAs, Docker images, and GitHub Release attachments; manual runs do not publish |
 | `Dependabot` | [View update activity](https://github.com/itsvrushabh/expense-organizer/pulls?q=is%3Apr+author%3Aapp%2Fdependabot) | Weekly schedule | Dependency update pull requests for Python, Bun/npm, Flutter/Dart, Cargo, Docker, and GitHub Actions |
 
 ### Status Meanings
@@ -163,11 +163,11 @@ GitHub reports the following workflow and job states:
 | `Skipped` | A conditional job was intentionally not run, such as release-only work on a normal branch push. |
 | `Neutral` / `No status` | No applicable result is available yet, or the workflow has not run for that branch. |
 
-The required `CI / Success` workflow is the branch-protection gate. It runs after the
-Python, frontend, Flutter, Rust, and service workflows complete for a commit, and fails
-if any required sub-workflow fails, is cancelled, or is missing. Configure the repository's
-branch protection rules to require the displayed `CI / Success / ci-success` check before
-merging.
+The required `CI / Success` workflow is the branch-protection gate. It starts with the
+other CI workflows, polls their exact commit and event until they complete, and fails if
+any required sub-workflow fails, is cancelled, is missing, or times out. Configure the
+repository's branch protection rules to require the displayed `CI / Success / ci-success`
+check before merging.
 
 ### Checks by Area
 
@@ -178,8 +178,9 @@ merging.
 - The Rust offline queue runs `cargo fmt`, strict Clippy, and `cargo test` in `CI / Rust`.
 - `CI / Services` builds and starts only the backend/frontend path on every branch push. It
     probe the frontend, API proxy, and expense endpoint, collect logs, and always clean up.
-- GGUF model-backed checks are not part of every commit because model weights and GPU
-    support are not available on standard GitHub-hosted runners.
+- GGUF model-backed checks are not currently run by CI or release publishing because model
+    weights and GPU support are not available on standard GitHub-hosted runners. The model
+    image requires its GGUF file to be mounted separately.
 
 ### Release Artifacts and Permissions
 
