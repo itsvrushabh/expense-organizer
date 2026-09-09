@@ -1,6 +1,9 @@
 # AI Model Server Microservice (`aimodel`) 🤖⚡
 
-`aimodel` is a containerized microservice running on port `8002` that provides **GPU-accelerated LLM Inference** using `llama-cpp-python` and `Qwen2.5-0.5B-Instruct-GGUF`. It runs the model on the GPU (NVIDIA GeForce GTX 1650 Ti) and exposes OpenAI-compatible and text generation APIs. It does not contain application business logic or tool execution logic; all agentic orchestration is handled by `aibackend`.
+`aimodel` is an internal microservice container running on port `8002` that provides **GPU-accelerated LLM Inference** using `llama-cpp-python` and `Qwen2.5-0.5B-Instruct-GGUF`. It runs the model on the GPU (NVIDIA GeForce GTX 1650 Ti) and exposes OpenAI-compatible and text generation APIs.
+
+> [!NOTE]
+> **No Unnecessary Port Exposure**: `aimodel` is an internal backend microservice consumed solely by `aibackend`. To keep host ports clean and avoid unnecessary exposure, `aimodel` is connected via the internal Docker bridge network (`expense-network:8002`) and is not exposed to host ports.
 
 ---
 
@@ -8,15 +11,15 @@
 
 ```mermaid
 flowchart LR
-    AIB["aibackend Orchestrator (port 8001)<br/>• Sends tool-calling prompts<br/>• Receives model JSON decisions"]
+    AIB["aibackend Orchestrator (port 18001)<br/>• Sends tool-calling prompts<br/>• Receives model JSON decisions"]
     
-    subgraph AIM["aimodel Container (port 8002)"]
+    subgraph AIM["aimodel Container (Internal Port 8002)"]
         Server["FastAPI Model Server"]
         GPU["GPU CUDA Offload Engine<br/>NVIDIA GTX 1650 Ti (4GB VRAM)<br/>n_gpu_layers = -1 (All 24 layers)<br/>Model: qwen2.5-0.5b-instruct-q4_k_m.gguf"]
         Server --> GPU
     end
 
-    AIB -->|"POST /v1/chat/completions"| Server
+    AIB -->|"POST http://aimodel:8002/v1/chat/completions"| Server
 ```
 
 ---
@@ -27,7 +30,7 @@ flowchart LR
 - **Model**: `qwen2.5-0.5b-instruct-q4_k_m.gguf` (~397 MB / 469 MB uncompressed)
 - **VRAM Required**: ~450–600 MB (fits safely inside 4 GB VRAM)
 - **Offload Parameter**: `N_GPU_LAYERS=-1` (all 24 transformer layers offloaded to GPU via CUDA)
-- **Port**: `8002`
+- **Internal Port**: `8002` (within `expense-network`)
 - **Device Status**: Reported in `GET /health`:
   ```json
   {
@@ -49,7 +52,7 @@ curl -L \
 
 ---
 
-## 3. Endpoints
+## 3. Endpoints (Internal Network)
 
 - `GET /`: Service metadata, device info, and endpoints catalog.
 - `GET /health`: Health status, model loaded flag, and GPU device info.
@@ -67,11 +70,6 @@ docker-compose up -d aimodel
 # View aimodel logs
 docker-compose logs -f aimodel
 ```
-
-### Access Points
-- 🤖 **AI Model Service**: `http://localhost:8002`
-- 🩺 **Health Check**: `http://localhost:8002/health`
-- 📚 **Swagger Docs**: `http://localhost:8002/docs`
 
 ---
 

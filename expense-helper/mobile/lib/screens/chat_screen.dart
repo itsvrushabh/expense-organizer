@@ -229,7 +229,7 @@ class _ChatScreenState extends State<ChatScreen> {
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 labelText: 'Server Base URL',
-                hintText: 'http://10.0.2.2:8001 or http://localhost:8001',
+                hintText: 'http://10.0.2.2:18001 or http://localhost:18001',
               ),
             ),
             const SizedBox(height: 12),
@@ -238,11 +238,11 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 ActionChip(
                   label: const Text('Android (10.0.2.2)'),
-                  onPressed: () => urlController.text = 'http://10.0.2.2:8001',
+                  onPressed: () => urlController.text = 'http://10.0.2.2:18001',
                 ),
                 ActionChip(
                   label: const Text('Localhost (127.0.0.1)'),
-                  onPressed: () => urlController.text = 'http://127.0.0.1:8001',
+                  onPressed: () => urlController.text = 'http://127.0.0.1:18001',
                 ),
               ],
             ),

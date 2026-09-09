@@ -13,8 +13,8 @@ All in-depth component and setup documentation is organized in the [`docs/`](doc
 - 💻 **[Web Frontend Guide](docs/frontend.md)**: Bun + React 19 + TypeScript, Excel pivot table views, spend heatmaps, and `/api` proxy.
 - 📱 **[Mobile App & Rust Engine Guide](docs/mobile.md)**: Flutter client, Material 3 gradient UI, C-FFI Rust sync engine, offline queue, and build guides.
 - 📚 **[REST API Reference](docs/api.md)**: Complete endpoint catalog, query parameters, JSON schemas, and curl examples.
-- 🧠 **[AI Backend Orchestrator Guide](docs/aibackend.md)**: Agentic function calling / tool dispatcher, session state machine, and DB ingestion (port 8001).
-- 🤖 **[AI Model Server Guide](docs/aimodel.md)**: Dedicated GPU-accelerated GGUF LLM inference microservice (port 8002).
+- 🧠 **[AI Backend Orchestrator Guide](docs/aibackend.md)**: Agentic function calling / tool dispatcher, session state machine, and DB ingestion (port 18001).
+- 🤖 **[AI Model Server Guide](docs/aimodel.md)**: Dedicated GPU-accelerated GGUF LLM inference microservice (internal port 8002).
 - 💬 **[Expense Helper Mobile Guide](docs/expense-helper-mobile.md)**: Multiplatform Flutter chat client (Android & iOS) with interactive draft cards.
 - 🖥️ **[Desktop Helper Roadmap (On Hold)](docs/expense-helper-desktop.md)**: Architecture and specification for planned Rust `iced` desktop client (Linux & Windows).
 
@@ -60,12 +60,14 @@ docker-compose up -d --build
 ```
 
 ### Access Points
-- 🌐 **Web Frontend**: [http://localhost:3000](http://localhost:3000)
-- 🔧 **Backend API**: [http://localhost:8000](http://localhost:8000)
-- 📚 **Swagger API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- 🧠 **AI Backend Orchestrator**: [http://localhost:8001](http://localhost:8001)
-- 🤖 **AI Model Server**: [http://localhost:8002](http://localhost:8002)
-- 🩺 **AI Health Status**: [http://localhost:8001/health](http://localhost:8001/health)
+- 🌐 **Web Frontend**: [http://localhost:13000](http://localhost:13000)
+- 🔧 **API Proxy (via Frontend)**: [http://localhost:13000/api](http://localhost:13000/api)
+- 📚 **Swagger API Docs**: [http://localhost:13000/api/docs](http://localhost:13000/api/docs)
+- 🧠 **AI Backend Orchestrator**: [http://localhost:18001](http://localhost:18001)
+- 🩺 **AI Health Status**: [http://localhost:18001/health](http://localhost:18001/health)
+
+> [!NOTE]
+> **Zero Unnecessary Port Exposure**: Both `backend` (internal port `8000`) and `aimodel` (internal port `8002`) run strictly on the internal Docker network with **no host port bindings**. All client API requests route through the Bun reverse proxy at `http://localhost:13000/api` or communicate with the AI assistant on port `18001`.
 
 ---
 
@@ -155,7 +157,7 @@ bun x tsc --noEmit
 Seed recurring expenses (e.g. Home Loan EMI, Electric Bill, Internet Bill) with automated deduplication:
 ```bash
 python3 scripts/add_recurring_expenses.py [API_URL]
-# Defaults to http://localhost:8000
+# Defaults to http://localhost:13000/api
 ```
 
 ---
@@ -176,7 +178,7 @@ expense-organizer/
 │   └── setup.md                  # Deployment & setup walkthrough
 ├── .github/
 │   └── workflows/build-mobile.yml # CI/CD for Android & iOS builds
-├── backend/                      # Pure REST core backend (port 8000)
+├── backend/                      # Pure REST core backend (internal port 8000)
 │   ├── main.py                   # Pure REST app factory, CORS, endpoint catalog
 │   ├── models.py                 # Pydantic schemas (Expense, ExpenseSummary)
 │   ├── storage.py                # In-memory data store
@@ -184,12 +186,12 @@ expense-organizer/
 │   ├── tests/                    # 34 pytest unit & integration tests
 │   ├── Dockerfile
 │   └── requirements.txt
-├── aibackend/                    # AI Orchestration container (port 8001)
+├── aibackend/                    # AI Orchestration container (port 18001)
 │   ├── app/                      # Tools schema, dispatcher, session state machine
 │   ├── tests/                    # 8 pytest tests for tools & session flows
 │   ├── Dockerfile
 │   └── requirements.txt
-├── aimodel/                      # Dedicated AI model inference server (port 8002)
+├── aimodel/                      # Dedicated AI model inference server (internal port 8002)
 │   ├── app/                      # GGUF GPU model runner, completions & health endpoints
 │   ├── models/                   # GGUF model weights (e.g. Qwen2.5-0.5B)
 │   ├── tests/                    # 4 pytest tests for inference & health

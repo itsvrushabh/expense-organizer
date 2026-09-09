@@ -90,9 +90,9 @@ mobile/
 ## Server Configuration
 
 Tap the **DNS icon** in the top-right corner of the mobile app to set the server URL:
-- **Linux Desktop**: `http://localhost:8000`
-- **Android Emulator**: `http://10.0.2.2:8000` (maps to host localhost)
-- **Physical Phone on Wi-Fi**: `http://<your-computer-ip>:8000`
+- **Linux Desktop / iOS Simulator**: `http://localhost:13000/api`
+- **Android Emulator**: `http://10.0.2.2:13000/api` (maps to host localhost)
+- **Physical Phone on Wi-Fi**: `http://<your-computer-ip>:13000/api`
 - Includes a **Test Connection** button for immediate connectivity diagnosis.
 
 ---

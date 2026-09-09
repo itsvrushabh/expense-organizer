@@ -121,7 +121,7 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               autocorrect: false,
               decoration: InputDecoration(
                 labelText: 'Server Base URL',
-                hintText: 'http://192.168.1.50:8000',
+                hintText: 'http://192.168.1.50:13000/api',
                 prefixIcon: const Icon(Icons.link),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.clear, size: 18),
@@ -143,19 +143,19 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               runSpacing: 4,
               children: [
                 ActionChip(
-                  label: const Text('Localhost (:8000)', style: TextStyle(fontSize: 11)),
+                  label: const Text('Localhost (:13000)', style: TextStyle(fontSize: 11)),
                   avatar: const Icon(Icons.computer, size: 14),
-                  onPressed: () => _applyPreset('http://localhost:8000'),
+                  onPressed: () => _applyPreset('http://localhost:13000/api'),
                 ),
                 ActionChip(
                   label: const Text('Android Emulator (10.0.2.2)', style: TextStyle(fontSize: 11)),
                   avatar: const Icon(Icons.phone_android, size: 14),
-                  onPressed: () => _applyPreset('http://10.0.2.2:8000'),
+                  onPressed: () => _applyPreset('http://10.0.2.2:13000/api'),
                 ),
                 ActionChip(
                   label: const Text('Wi-Fi IP Prefix', style: TextStyle(fontSize: 11)),
                   avatar: const Icon(Icons.wifi, size: 14),
-                  onPressed: () => _applyPreset('http://192.168.1.:8000'),
+                  onPressed: () => _applyPreset('http://192.168.1.:13000/api'),
                 ),
               ],
             ),
@@ -216,7 +216,7 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: const Text(
-                '💡 Tip: On physical iPhone / Android devices connected to your home/office Wi-Fi, use your computer\'s IP address (e.g. http://192.168.1.x:8000).',
+                '💡 Tip: On physical iPhone / Android devices connected to your home/office Wi-Fi, use your computer\'s IP address (e.g. http://192.168.1.x:13000/api).',
                 style: TextStyle(fontSize: 11, color: Colors.black54),
               ),
             ),

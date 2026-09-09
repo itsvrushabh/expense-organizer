@@ -136,13 +136,13 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
               controller: controller,
               decoration: const InputDecoration(
                 labelText: 'API URL',
-                hintText: 'http://localhost:8000',
+                hintText: 'http://localhost:13000/api',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 8),
             const Text(
-              'Tip: For Android emulator use http://10.0.2.2:8000. For physical phone use your machine IP: http://192.168.x.x:8000',
+              'Tip: For Android emulator use http://10.0.2.2:13000/api. For physical phone use your machine IP: http://192.168.x.x:13000/api',
               style: TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ],

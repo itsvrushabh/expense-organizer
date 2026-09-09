@@ -1,6 +1,6 @@
 # AI Backend Orchestration Service (`aibackend`) 🤖🧠
 
-`aibackend` is a dedicated microservice container running on port `8001` that acts as the **Agentic Orchestrator & Tool Caller**. It handles all application logic, conversation state machines, Python function calling / tool execution, and HTTP communications with both the pure model server (`aimodel:8002`) and the core expense database (`backend:8000`).
+`aibackend` is a dedicated microservice container running on internal port `8001` (published to host port `18001`) that acts as the **Agentic Orchestrator & Tool Caller**. It handles all application logic, conversation state machines, Python function calling / tool execution, and HTTP communications with both the pure model server (`aimodel:8002`) and the core expense database (`backend:8000`).
 
 ---
 
@@ -12,7 +12,7 @@ flowchart LR
         Mobile["expense-helper/mobile<br/>(Android & iOS)"]
     end
 
-    subgraph AIB["Dedicated aibackend Service (Port 8001)"]
+    subgraph AIB["Dedicated aibackend Service (Internal 8001 / Host 18001)"]
         ChatRouter["FastAPI Router<br/>/api/chat/message<br/>/api/chat/confirm<br/>/api/chat/cancel<br/>/health"]
         SessionStore["Session State Machine<br/>(IDLE, AWAITING_CONFIRMATION, SAVED)"]
         ToolEngine["Tool Dispatcher & Logic<br/>• draft_expense<br/>• update_draft_field<br/>• commit_expense<br/>• ask_clarification<br/>• cancel_draft"]
@@ -25,11 +25,11 @@ flowchart LR
         ToolEngine --> ExpenseClient
     end
 
-    subgraph ModelServer["Dedicated aimodel Service (Port 8002)"]
+    subgraph ModelServer["Internal aimodel Service (Port 8002 - No Host Exposure)"]
         AIM["FastAPI Model Server<br/>• GPU CUDA Offload (GTX 1650 Ti)<br/>• Qwen 2.5 0.5B GGUF<br/>• POST /v1/chat/completions"]
     end
 
-    subgraph CoreBackend["Pure Core Backend (Port 8000)"]
+    subgraph CoreBackend["Pure Core Backend (Internal Port 8000 - No Host Exposure)"]
         CoreAPI["FastAPI REST API<br/>POST /expenses<br/>SQLite Storage"]
     end
 
@@ -74,7 +74,7 @@ flowchart LR
 - `POST /api/chat/confirm`: Confirm and persist pending draft into core database.
 - `POST /api/chat/cancel`: Discard pending draft.
 - `POST /api/chat/reset`: Reset conversation session.
-- `GET /health`: Health status reporting connectivity to both `aimodel` and `backend`.
+- `GET /health`: Health status reporting connectivity to both `aimodel` (port 8002) and `backend` (port 8000).
 
 ---
 
