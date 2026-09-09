@@ -9,14 +9,11 @@ from app.session import SessionManager
 from app.tools import (
     TOOLS_SCHEMA,
     ExpenseDraft,
+    ToolCall,
+    execute_tool,
     tool_commit_expense,
     tool_draft_expense,
     tool_update_draft_field,
-    tool_ask_clarification,
-    tool_cancel_draft,
-    execute_tool,
-    ExpenseDraft,
-    ToolCall,
 )
 from fastapi.testclient import TestClient
 
@@ -238,4 +235,3 @@ def test_chat_message_summary_flow(mock_summary, client):
     assert data["status"] == "idle"
     assert "Expense Summary" in data["message"]
     assert "AWS Cloud" in data["message"]
-

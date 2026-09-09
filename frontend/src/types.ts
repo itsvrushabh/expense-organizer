@@ -37,4 +37,3 @@ export interface ExpenseSummary {
 }
 
 export type ViewMode = "day" | "week" | "month" | "year";
-

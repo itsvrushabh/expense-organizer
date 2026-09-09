@@ -1,9 +1,9 @@
 import asyncio
-from datetime import date, datetime
 import json
 import logging
 import os
-from typing import Dict, List, Optional, Tuple
+from datetime import date, datetime
+from typing import Dict, List, Optional
 
 from models import Category, CategoryCreate, Currency, Expense, ExpenseCreate, ExpenseSummary
 
@@ -17,11 +17,19 @@ DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
 DEFAULT_CURRENCIES: Dict[str, Currency] = {
     "USD": Currency(code="USD", name="US Dollar", symbol="$", exchange_rate=1.0, is_default=True),
-    "INR": Currency(code="INR", name="Indian Rupee", symbol="₹", exchange_rate=84.0, is_default=False),
+    "INR": Currency(
+        code="INR", name="Indian Rupee", symbol="₹", exchange_rate=84.0, is_default=False
+    ),
     "EUR": Currency(code="EUR", name="Euro", symbol="€", exchange_rate=0.92, is_default=False),
-    "JPY": Currency(code="JPY", name="Japanese Yen", symbol="¥", exchange_rate=150.0, is_default=False),
-    "GBP": Currency(code="GBP", name="British Pound", symbol="£", exchange_rate=0.78, is_default=False),
-    "CNY": Currency(code="CNY", name="Chinese Yuan", symbol="¥", exchange_rate=7.2, is_default=False),
+    "JPY": Currency(
+        code="JPY", name="Japanese Yen", symbol="¥", exchange_rate=150.0, is_default=False
+    ),
+    "GBP": Currency(
+        code="GBP", name="British Pound", symbol="£", exchange_rate=0.78, is_default=False
+    ),
+    "CNY": Currency(
+        code="CNY", name="Chinese Yuan", symbol="¥", exchange_rate=7.2, is_default=False
+    ),
 }
 
 DEFAULT_CATEGORIES_DATA = [
@@ -70,6 +78,7 @@ def is_db_connected() -> bool:
 # ---------------------------------------------------------------------------
 # Database Initialization & Migrations (PostgreSQL)
 # ---------------------------------------------------------------------------
+
 
 async def init_db(max_retries: int = 5, retry_delay: float = 1.0):
     global _pool
@@ -538,7 +547,10 @@ async def init_db(max_retries: int = 5, retry_delay: float = 1.0):
             if attempt < max_retries:
                 await asyncio.sleep(retry_delay)
             else:
-                logger.error("Could not connect to PostgreSQL after %d attempts. Falling back to in-memory.", max_retries)
+                logger.error(
+                    "Could not connect to PostgreSQL after %d attempts. Falling back to in-memory.",
+                    max_retries,
+                )
 
 
 async def close_db():
@@ -556,6 +568,7 @@ async def close_db():
 # ---------------------------------------------------------------------------
 # Currency Operations
 # ---------------------------------------------------------------------------
+
 
 async def get_currencies() -> List[Currency]:
     if _pool is not None:
@@ -637,14 +650,19 @@ async def update_currency_rates(rates: Dict[str, float]) -> List[Currency]:
 # Category Operations
 # ---------------------------------------------------------------------------
 
+
 async def get_categories(active_only: bool = True) -> List[Category]:
     if _pool is not None:
         async with _pool.connection() as conn:
             async with conn.cursor() as cur:
                 if active_only:
-                    await cur.execute("SELECT id, name, icon, color, is_active FROM category WHERE is_active = TRUE ORDER BY id ASC")
+                    await cur.execute(
+                        "SELECT id, name, icon, color, is_active FROM category WHERE is_active = TRUE ORDER BY id ASC"
+                    )
                 else:
-                    await cur.execute("SELECT id, name, icon, color, is_active FROM category ORDER BY id ASC")
+                    await cur.execute(
+                        "SELECT id, name, icon, color, is_active FROM category ORDER BY id ASC"
+                    )
                 rows = await cur.fetchall()
                 return [
                     Category(
@@ -796,6 +814,7 @@ async def resolve_category(name_or_id: str) -> Category:
 # Expense Operations
 # ---------------------------------------------------------------------------
 
+
 def _row_to_expense(row) -> Expense:
     return Expense(
         id=row[0],
@@ -831,12 +850,15 @@ async def get_expense(expense_id: int) -> Optional[Expense]:
     if _pool is not None:
         async with _pool.connection() as conn:
             async with conn.cursor() as cur:
-                await cur.execute("""
+                await cur.execute(
+                    """
                     SELECT id, description, amount, currency_code, currency_symbol, amount_usd,
                            category, category_id, category_icon, category_color, date
                     FROM view_expenses_detailed
                     WHERE id = %s
-                """, (expense_id,))
+                """,
+                    (expense_id,),
+                )
                 r = await cur.fetchone()
                 if r:
                     return _row_to_expense(r)
@@ -877,12 +899,15 @@ async def add(expense: ExpenseCreate) -> Expense:
                 row = await cur.fetchone()
                 new_id = row[0]
 
-                await cur.execute("""
+                await cur.execute(
+                    """
                     SELECT id, description, amount, currency_code, currency_symbol, amount_usd,
                            category, category_id, category_icon, category_color, date
                     FROM view_expenses_detailed
                     WHERE id = %s
-                """, (new_id,))
+                """,
+                    (new_id,),
+                )
                 detail_row = await cur.fetchone()
             await conn.commit()
             return _row_to_expense(detail_row)
@@ -928,18 +953,28 @@ async def update(expense_id: int, expense: ExpenseCreate) -> Optional[Expense]:
                     WHERE id = %s
                     RETURNING id
                     """,
-                    (expense.description, expense.amount, curr.code, category_obj.id, expense.date, expense_id),
+                    (
+                        expense.description,
+                        expense.amount,
+                        curr.code,
+                        category_obj.id,
+                        expense.date,
+                        expense_id,
+                    ),
                 )
                 row = await cur.fetchone()
                 if not row:
                     return None
 
-                await cur.execute("""
+                await cur.execute(
+                    """
                     SELECT id, description, amount, currency_code, currency_symbol, amount_usd,
                            category, category_id, category_icon, category_color, date
                     FROM view_expenses_detailed
                     WHERE id = %s
-                """, (expense_id,))
+                """,
+                    (expense_id,),
+                )
                 detail_row = await cur.fetchone()
             await conn.commit()
             return _row_to_expense(detail_row)
@@ -985,6 +1020,7 @@ async def delete(expense_id: int) -> Optional[Expense]:
 # ---------------------------------------------------------------------------
 # High Performance Aggregated Summary Queries & Views
 # ---------------------------------------------------------------------------
+
 
 async def get_summary(
     year: Optional[int] = None,
@@ -1040,7 +1076,9 @@ async def get_summary(
                             category_id=item.get("category_id"),
                             category_icon=item.get("category_icon"),
                             category_color=item.get("category_color"),
-                            date=item["date"] if isinstance(item["date"], date) else date.fromisoformat(item["date"]),
+                            date=item["date"]
+                            if isinstance(item["date"], date)
+                            else date.fromisoformat(item["date"]),
                         )
                         for item in exp_data
                     ]
@@ -1060,7 +1098,11 @@ async def get_summary(
 
     if year is not None:
         if week is not None:
-            filtered = [e for e in filtered if e.date.isocalendar().year == year and e.date.isocalendar().week == week]
+            filtered = [
+                e
+                for e in filtered
+                if e.date.isocalendar().year == year and e.date.isocalendar().week == week
+            ]
         elif month is not None:
             filtered = [e for e in filtered if e.date.year == year and e.date.month == month]
         else:

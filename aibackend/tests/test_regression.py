@@ -4,10 +4,10 @@ Guards against parsing regressions, session lifecycle edge cases,
 and fallback logic for tool use and date normalization.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import AsyncMock, patch
-import pytest
 
+import pytest
 from app.expense_client import (
     check_backend_health,
     get_currencies_from_backend,
@@ -22,14 +22,13 @@ from app.tools import (
     execute_tool,
     tool_ask_clarification,
     tool_cancel_draft,
-    tool_draft_expense,
     tool_update_draft_field,
 )
-
 
 # ---------------------------------------------------------------------------
 # 1. Date Normalization Regressions
 # ---------------------------------------------------------------------------
+
 
 def test_regression_normalize_iso_date_relative_keywords():
     ref = datetime(2026, 3, 15, 12, 0, 0)
@@ -51,6 +50,7 @@ def test_regression_normalize_iso_date_iso_and_fallback():
 # ---------------------------------------------------------------------------
 # 2. Tool Execution & Draft Field Modification Regressions
 # ---------------------------------------------------------------------------
+
 
 def test_regression_tool_update_draft_field_all_fields():
     draft = ExpenseDraft(description="Old", amount=10.0, category="Food", date="2026-03-01")
@@ -99,6 +99,7 @@ def test_regression_tool_cancel_draft_with_and_without_reason():
 # ---------------------------------------------------------------------------
 # 3. Expense Client HTTP Error Handling Regressions
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.anyio
 async def test_regression_insert_expense_to_db_error_handling():
@@ -152,6 +153,7 @@ async def test_regression_currency_client_error_handling():
 # 4. Session Manager Lifecycle Regressions
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.anyio
 async def test_regression_session_manager_confirm_cancel_edge_cases():
     m_client = ModelClient("http://nonexistent:8002")
@@ -169,7 +171,9 @@ async def test_regression_session_manager_confirm_cancel_edge_cases():
 
     # Resetting session
     session = manager.get_or_create_session("sess-to-reset")
-    session.pending_draft = ExpenseDraft(description="X", amount=5.0, category="Food", date="2026-09-10")
+    session.pending_draft = ExpenseDraft(
+        description="X", amount=5.0, category="Food", date="2026-09-10"
+    )
     manager.reset_session("sess-to-reset")
     assert "sess-to-reset" not in manager.sessions
 
@@ -210,4 +214,3 @@ async def test_regression_query_expense_summary_empty_results(mock_fetch):
     assert res.status == "idle"
     assert "No expenses found" in res.message
     assert "yesterday" in res.message
-

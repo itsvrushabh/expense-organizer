@@ -1,10 +1,9 @@
-from datetime import date
 from unittest.mock import AsyncMock, patch
-import pytest
-from fastapi.testclient import TestClient
 
-from main import create_app
+import pytest
 import storage
+from fastapi.testclient import TestClient
+from main import create_app
 
 
 @pytest.fixture(autouse=True)
@@ -24,6 +23,7 @@ def client():
 # ---------------------------------------------------------------------------
 # Currencies Tests
 # ---------------------------------------------------------------------------
+
 
 def test_list_currencies_returns_defaults(client):
     response = client.get("/currencies")
@@ -74,6 +74,7 @@ def test_currencies_refresh_resilient_on_offline(client):
 # ---------------------------------------------------------------------------
 # Categories Tests
 # ---------------------------------------------------------------------------
+
 
 def test_list_categories_includes_online_and_defaults(client):
     response = client.get("/categories")
@@ -136,10 +137,25 @@ def test_soft_delete_and_reactivate_category(client):
 # Combined Summary Endpoint (/expenses/summary) Tests
 # ---------------------------------------------------------------------------
 
+
 def test_combined_summary_multiple_categories(client):
-    client.post("/expenses", json={"description": "Netflix", "amount": 15.0, "category": "Online", "date": "2026-02-10"})
-    client.post("/expenses", json={"description": "Keyboard", "amount": 45.0, "category": "Shopping", "date": "2026-02-14"})
-    client.post("/expenses", json={"description": "Dinner", "amount": 30.0, "category": "Food", "date": "2026-02-15"})
+    client.post(
+        "/expenses",
+        json={"description": "Netflix", "amount": 15.0, "category": "Online", "date": "2026-02-10"},
+    )
+    client.post(
+        "/expenses",
+        json={
+            "description": "Keyboard",
+            "amount": 45.0,
+            "category": "Shopping",
+            "date": "2026-02-14",
+        },
+    )
+    client.post(
+        "/expenses",
+        json={"description": "Dinner", "amount": 30.0, "category": "Food", "date": "2026-02-15"},
+    )
 
     # Query Online + Shopping only
     res = client.get("/expenses/summary?categories=Online&categories=Shopping")
@@ -153,10 +169,34 @@ def test_combined_summary_multiple_categories(client):
 
 def test_combined_summary_february_online_expenses(client):
     # Feb Online
-    client.post("/expenses", json={"description": "Server hosting", "amount": 50.0, "category": "Online", "date": "2026-02-05"})
-    client.post("/expenses", json={"description": "Domain renewal", "amount": 20.0, "category": "Online", "date": "2026-02-20"})
+    client.post(
+        "/expenses",
+        json={
+            "description": "Server hosting",
+            "amount": 50.0,
+            "category": "Online",
+            "date": "2026-02-05",
+        },
+    )
+    client.post(
+        "/expenses",
+        json={
+            "description": "Domain renewal",
+            "amount": 20.0,
+            "category": "Online",
+            "date": "2026-02-20",
+        },
+    )
     # March Online
-    client.post("/expenses", json={"description": "SaaS tool", "amount": 35.0, "category": "Online", "date": "2026-03-01"})
+    client.post(
+        "/expenses",
+        json={
+            "description": "SaaS tool",
+            "amount": 35.0,
+            "category": "Online",
+            "date": "2026-03-01",
+        },
+    )
 
     # Summary of February Month for Online Expense
     res = client.get("/expenses/summary?year=2026&month=2&categories=Online")
@@ -167,7 +207,16 @@ def test_combined_summary_february_online_expenses(client):
 
 
 def test_combined_summary_currency_conversion(client):
-    client.post("/expenses", json={"description": "Book", "amount": 10.0, "currency": "USD", "category": "Education", "date": "2026-09-01"})
+    client.post(
+        "/expenses",
+        json={
+            "description": "Book",
+            "amount": 10.0,
+            "currency": "USD",
+            "category": "Education",
+            "date": "2026-09-01",
+        },
+    )
 
     # Convert to INR (84.0 rate)
     res_inr = client.get("/expenses/summary?currency=INR")

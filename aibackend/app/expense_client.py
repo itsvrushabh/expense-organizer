@@ -95,7 +95,11 @@ async def refresh_exchange_rates_in_backend() -> list[dict] | None:
             resp = await client.post(url)
             if resp.status_code in [200, 201]:
                 return resp.json()
-            logger.error("Failed to refresh currencies in backend: status %s, body %s", resp.status_code, resp.text)
+            logger.error(
+                "Failed to refresh currencies in backend: status %s, body %s",
+                resp.status_code,
+                resp.text,
+            )
             return None
     except Exception as e:
         logger.error("Error refreshing currency rates via backend: %s", e)

@@ -1,10 +1,10 @@
-from fastapi.testclient import TestClient
-import pytest
 from unittest.mock import patch
 
+import app.main as main_module
+import pytest
 from app.main import create_app
 from app.model import ModelServer
-import app.main as main_module
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture

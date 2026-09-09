@@ -6,13 +6,13 @@ and legacy API contracts.
 
 from datetime import date
 from unittest.mock import AsyncMock, patch
-import pytest
-from fastapi.testclient import TestClient
 
+import pytest
+import storage
+from fastapi.testclient import TestClient
 from main import create_app
 from models import Expense, ExpenseCreate, ExpenseSummary
 from services import currency_service
-import storage
 
 
 @pytest.fixture(autouse=True)
@@ -32,6 +32,7 @@ def client():
 # ---------------------------------------------------------------------------
 # 1. Model Inheritance & Legacy Schema Regression
 # ---------------------------------------------------------------------------
+
 
 def test_regression_expense_model_isinstance():
     """Guards against regression where Expense did not subclass ExpenseCreate."""
@@ -60,12 +61,32 @@ def test_regression_expense_summary_defaults():
 # 2. Date Sorting Regression (Must Ascend by Date in Aggregations)
 # ---------------------------------------------------------------------------
 
+
 def test_regression_month_view_date_sorting(client):
     """Month queries must return expenses ordered chronologically (ASC)."""
     # Insert unordered dates
-    client.post("/expenses", json={"description": "Late March", "amount": 10.0, "category": "Food", "date": "2026-03-28"})
-    client.post("/expenses", json={"description": "Early March", "amount": 20.0, "category": "Food", "date": "2026-03-02"})
-    client.post("/expenses", json={"description": "Mid March", "amount": 15.0, "category": "Food", "date": "2026-03-15"})
+    client.post(
+        "/expenses",
+        json={
+            "description": "Late March",
+            "amount": 10.0,
+            "category": "Food",
+            "date": "2026-03-28",
+        },
+    )
+    client.post(
+        "/expenses",
+        json={
+            "description": "Early March",
+            "amount": 20.0,
+            "category": "Food",
+            "date": "2026-03-02",
+        },
+    )
+    client.post(
+        "/expenses",
+        json={"description": "Mid March", "amount": 15.0, "category": "Food", "date": "2026-03-15"},
+    )
 
     res = client.get("/expenses/month/2026/3")
     assert res.status_code == 200
@@ -77,9 +98,18 @@ def test_regression_month_view_date_sorting(client):
 def test_regression_week_view_date_sorting(client):
     """Week queries must return expenses ordered chronologically (ASC)."""
     # 2026-03-16 to 2026-03-22 is Week 12
-    client.post("/expenses", json={"description": "Friday", "amount": 10.0, "category": "Food", "date": "2026-03-20"})
-    client.post("/expenses", json={"description": "Tuesday", "amount": 20.0, "category": "Food", "date": "2026-03-17"})
-    client.post("/expenses", json={"description": "Monday", "amount": 15.0, "category": "Food", "date": "2026-03-16"})
+    client.post(
+        "/expenses",
+        json={"description": "Friday", "amount": 10.0, "category": "Food", "date": "2026-03-20"},
+    )
+    client.post(
+        "/expenses",
+        json={"description": "Tuesday", "amount": 20.0, "category": "Food", "date": "2026-03-17"},
+    )
+    client.post(
+        "/expenses",
+        json={"description": "Monday", "amount": 15.0, "category": "Food", "date": "2026-03-16"},
+    )
 
     res = client.get("/expenses/week/2026/12")
     assert res.status_code == 200
@@ -91,18 +121,25 @@ def test_regression_week_view_date_sorting(client):
 # 3. Category Deduplication & Auto-Resolution Regression
 # ---------------------------------------------------------------------------
 
+
 def test_regression_category_case_insensitivity(client):
     """Different casings of existing category must resolve without creating duplicates."""
     initial_categories = client.get("/categories").json()
     initial_count = len(initial_categories)
 
     # Post with lowercase and whitespace
-    res1 = client.post("/expenses", json={"description": "Burger", "amount": 8.0, "category": " food ", "date": "2026-09-01"})
+    res1 = client.post(
+        "/expenses",
+        json={"description": "Burger", "amount": 8.0, "category": " food ", "date": "2026-09-01"},
+    )
     assert res1.status_code == 200
     assert res1.json()["category"] == "Food"  # Normalized to canonical name
 
     # Post with uppercase
-    res2 = client.post("/expenses", json={"description": "Pizza", "amount": 12.0, "category": "FOOD", "date": "2026-09-02"})
+    res2 = client.post(
+        "/expenses",
+        json={"description": "Pizza", "amount": 12.0, "category": "FOOD", "date": "2026-09-02"},
+    )
     assert res2.status_code == 200
     assert res2.json()["category"] == "Food"
 
@@ -113,7 +150,15 @@ def test_regression_category_case_insensitivity(client):
 
 def test_regression_unseeded_category_auto_creation(client):
     """Posting with an unknown category string must auto-create it gracefully."""
-    res = client.post("/expenses", json={"description": "Bitcoin Mining", "amount": 100.0, "category": "CryptoHardware", "date": "2026-09-01"})
+    res = client.post(
+        "/expenses",
+        json={
+            "description": "Bitcoin Mining",
+            "amount": 100.0,
+            "category": "CryptoHardware",
+            "date": "2026-09-01",
+        },
+    )
     assert res.status_code == 200
     data = res.json()
     assert data["category"] == "CryptoHardware"
@@ -130,7 +175,15 @@ def test_regression_soft_delete_preserves_historical_expenses(client):
     cat_res = client.post("/categories", json={"name": "GymMemberships"})
     cat_id = cat_res.json()["id"]
 
-    exp_res = client.post("/expenses", json={"description": "Gold's Gym", "amount": 50.0, "category": "GymMemberships", "date": "2026-01-10"})
+    exp_res = client.post(
+        "/expenses",
+        json={
+            "description": "Gold's Gym",
+            "amount": 50.0,
+            "category": "GymMemberships",
+            "date": "2026-01-10",
+        },
+    )
     exp_id = exp_res.json()["id"]
 
     # Soft delete category
@@ -148,10 +201,19 @@ def test_regression_soft_delete_preserves_historical_expenses(client):
 # 4. Input Validation & Error Handling Regressions
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("invalid_amount", [0.0, -0.01, -100.0])
 def test_regression_rejects_non_positive_amounts(client, invalid_amount):
     """Amount must strictly be > 0."""
-    res = client.post("/expenses", json={"description": "Bad Amount", "amount": invalid_amount, "category": "Food", "date": "2026-09-01"})
+    res = client.post(
+        "/expenses",
+        json={
+            "description": "Bad Amount",
+            "amount": invalid_amount,
+            "category": "Food",
+            "date": "2026-09-01",
+        },
+    )
     assert res.status_code == 422
 
 
@@ -171,7 +233,10 @@ def test_regression_rejects_invalid_week_boundaries(client, invalid_week):
 
 def test_regression_non_existent_id_operations(client):
     """Updating or deleting non-existent IDs must return 404, not 500."""
-    put_res = client.put("/expenses/999999", json={"description": "Ghost", "amount": 10.0, "category": "Food", "date": "2026-09-01"})
+    put_res = client.put(
+        "/expenses/999999",
+        json={"description": "Ghost", "amount": 10.0, "category": "Food", "date": "2026-09-01"},
+    )
     assert put_res.status_code == 404
 
     del_res = client.delete("/expenses/999999")
@@ -182,10 +247,20 @@ def test_regression_non_existent_id_operations(client):
 # 5. Multi-Currency & Rate Conversion Regressions
 # ---------------------------------------------------------------------------
 
+
 def test_regression_multi_currency_summary_conversion(client):
     """Guards currency precision and correct symbol attachment."""
     # Post $100 USD expense
-    client.post("/expenses", json={"description": "Laptop Stand", "amount": 100.0, "currency": "USD", "category": "Shopping", "date": "2026-09-01"})
+    client.post(
+        "/expenses",
+        json={
+            "description": "Laptop Stand",
+            "amount": 100.0,
+            "currency": "USD",
+            "category": "Shopping",
+            "date": "2026-09-01",
+        },
+    )
 
     # Check in INR (rate 84.0)
     inr_res = client.get("/expenses/summary?currency=INR")
@@ -208,6 +283,7 @@ def test_regression_multi_currency_summary_conversion(client):
 # 6. Combined Multi-Category Summary Regression
 # ---------------------------------------------------------------------------
 
+
 def test_regression_combined_summary_empty_result(client):
     """Summary with no matching records must return 0 total, 0 count, empty list."""
     res = client.get("/expenses/summary?year=1999&categories=NonExistentCategory")
@@ -221,6 +297,7 @@ def test_regression_combined_summary_empty_result(client):
 # ---------------------------------------------------------------------------
 # 7. Currency Service Resilience Regression
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.anyio
 async def test_regression_currency_service_network_timeout():
@@ -271,6 +348,7 @@ async def test_regression_currency_service_http_error_handling():
 async def test_regression_currency_worker_clean_cancellation():
     """Currency sync worker starts and cancels cleanly without hanging or error."""
     import asyncio
+
     with patch("services.currency_service.sync_currency_rates", new_callable=AsyncMock):
         task = asyncio.create_task(currency_service.start_currency_sync_worker())
         await asyncio.sleep(0.01)

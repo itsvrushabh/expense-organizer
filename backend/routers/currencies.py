@@ -1,8 +1,8 @@
 import logging
 from typing import List
-from fastapi import APIRouter
 
 import storage
+from fastapi import APIRouter
 from models import Currency
 from services import currency_service
 

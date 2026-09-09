@@ -142,9 +142,7 @@ function App() {
   };
 
   const activeCategories =
-    categories.length > 0
-      ? categories.filter((c) => c.is_active !== false)
-      : DEFAULT_CATEGORIES;
+    categories.length > 0 ? categories.filter((c) => c.is_active !== false) : DEFAULT_CATEGORIES;
 
   const selectedCategory = activeCategories.find(
     (c) => c.name.toLowerCase() === (newExpense.category || "").toLowerCase(),

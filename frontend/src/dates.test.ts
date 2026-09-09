@@ -1,5 +1,5 @@
-import { expect, test } from "bun:test"
-import { daysInMonth, formatDate, parseLocalDate, stepDate, toDateInput } from "./dates"
+import { expect, test } from "bun:test";
+import { daysInMonth, formatDate, parseLocalDate, stepDate, toDateInput } from "./dates";
 
 test("toDateInput formats local YYYY-MM-DD with padded month/day", () => {
   expect(toDateInput(new Date(2026, 7, 3))).toBe("2026-08-03");
@@ -27,16 +27,16 @@ test("daysInMonth handles February in a leap year", () => {
 });
 
 test("stepDate moves by the active view unit", () => {
-  const start = new Date(2026, 7, 23)
-  expect(stepDate(start, "day", 1).getDate()).toBe(24)
-  expect(stepDate(start, "month", -1).getMonth()).toBe(6)
-  expect(stepDate(start, "year", 1).getFullYear()).toBe(2027)
-})
+  const start = new Date(2026, 7, 23);
+  expect(stepDate(start, "day", 1).getDate()).toBe(24);
+  expect(stepDate(start, "month", -1).getMonth()).toBe(6);
+  expect(stepDate(start, "year", 1).getFullYear()).toBe(2027);
+});
 
 test("formatDate formats according to view mode", () => {
-  const d = new Date(2026, 8, 10)
-  expect(formatDate(d, "day")).toContain("2026")
-  expect(formatDate(d, "week")).toContain("Week of")
-  expect(formatDate(d, "month")).toContain("September 2026")
-  expect(formatDate(d, "year")).toBe("2026")
-})
+  const d = new Date(2026, 8, 10);
+  expect(formatDate(d, "day")).toContain("2026");
+  expect(formatDate(d, "week")).toContain("Week of");
+  expect(formatDate(d, "month")).toContain("September 2026");
+  expect(formatDate(d, "year")).toBe("2026");
+});

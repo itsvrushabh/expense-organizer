@@ -1,8 +1,8 @@
 import asyncio
 import logging
-from typing import Dict, List, Optional
-import httpx
+from typing import Dict, List
 
+import httpx
 import storage
 from models import Currency
 
@@ -31,9 +31,13 @@ async def fetch_live_rates() -> Dict[str, float]:
                     logger.info("Successfully fetched %d live currency exchange rates", len(rates))
                     return rates
                 else:
-                    logger.warning("Exchange rate API returned unexpected payload: %s", data.get("result"))
+                    logger.warning(
+                        "Exchange rate API returned unexpected payload: %s", data.get("result")
+                    )
             else:
-                logger.warning("Exchange rate API HTTP error %s: %s", resp.status_code, resp.text[:100])
+                logger.warning(
+                    "Exchange rate API HTTP error %s: %s", resp.status_code, resp.text[:100]
+                )
     except Exception as e:
         logger.warning("Failed to fetch live exchange rates (offline or timeout): %s", e)
 

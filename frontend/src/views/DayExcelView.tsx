@@ -203,16 +203,58 @@ export function DayExcelView({
                   {(availableCategories && availableCategories.length > 0
                     ? availableCategories
                     : [
-                        { id: 1, name: "Food", color: "#FF5722", icon: "utensils", is_active: true },
-                        { id: 2, name: "Groceries", color: "#4CAF50", icon: "shopping-cart", is_active: true },
-                        { id: 3, name: "Transport", color: "#2196F3", icon: "car", is_active: true },
-                        { id: 4, name: "Shopping", color: "#E91E63", icon: "shopping-bag", is_active: true },
-                        { id: 5, name: "Entertainment", color: "#9C27B0", icon: "film", is_active: true },
-                        { id: 6, name: "Utilities", color: "#FF9800", icon: "zap", is_active: true },
+                        {
+                          id: 1,
+                          name: "Food",
+                          color: "#FF5722",
+                          icon: "utensils",
+                          is_active: true,
+                        },
+                        {
+                          id: 2,
+                          name: "Groceries",
+                          color: "#4CAF50",
+                          icon: "shopping-cart",
+                          is_active: true,
+                        },
+                        {
+                          id: 3,
+                          name: "Transport",
+                          color: "#2196F3",
+                          icon: "car",
+                          is_active: true,
+                        },
+                        {
+                          id: 4,
+                          name: "Shopping",
+                          color: "#E91E63",
+                          icon: "shopping-bag",
+                          is_active: true,
+                        },
+                        {
+                          id: 5,
+                          name: "Entertainment",
+                          color: "#9C27B0",
+                          icon: "film",
+                          is_active: true,
+                        },
+                        {
+                          id: 6,
+                          name: "Utilities",
+                          color: "#FF9800",
+                          icon: "zap",
+                          is_active: true,
+                        },
                         { id: 7, name: "Health", color: "#F44336", icon: "heart", is_active: true },
                         { id: 8, name: "Travel", color: "#00BCD4", icon: "plane", is_active: true },
                         { id: 9, name: "Online", color: "#3F51B5", icon: "globe", is_active: true },
-                        { id: 10, name: "Other", color: "#607D8B", icon: "help-circle", is_active: true },
+                        {
+                          id: 10,
+                          name: "Other",
+                          color: "#607D8B",
+                          icon: "help-circle",
+                          is_active: true,
+                        },
                       ]
                   ).map((c) => (
                     <option key={c.id || c.name} value={c.name}>
@@ -222,11 +264,7 @@ export function DayExcelView({
                   {editing.draft.category &&
                     !availableCategories?.some(
                       (c) => c.name.toLowerCase() === editing.draft.category.toLowerCase(),
-                    ) && (
-                      <option value={editing.draft.category}>
-                        {editing.draft.category}
-                      </option>
-                    )}
+                    ) && <option value={editing.draft.category}>{editing.draft.category}</option>}
                 </select>
               </label>
               <label>
