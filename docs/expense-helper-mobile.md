@@ -1,6 +1,6 @@
 # Expense Helper Mobile Client (`expense-helper/mobile`) 📱💬
 
-`expense-helper/mobile` is a multiplatform chat client built with Flutter targeting **Android** and **iOS**. It interacts with `aibackend` to provide a natural language expense-entry experience.
+`expense-helper/mobile` is a multiplatform chat client built with Flutter targeting **Android** and **iOS**. It interacts with `aimodel` to provide a natural language expense-entry experience.
 
 ---
 
@@ -31,7 +31,7 @@ expense-helper/mobile/
 │   ├── screens/
 │   │   └── chat_screen.dart            # Main chat screen & connection dialog
 │   ├── services/
-│   │   └── ai_chat_service.dart        # HTTP client calling aibackend API
+│   │   └── ai_chat_service.dart        # HTTP client calling aimodel API
 │   └── widgets/
 │       ├── chat_bubble.dart            # User & Assistant chat bubbles
 │       └── expense_draft_card.dart     # Action cards with confirm/cancel buttons
@@ -46,7 +46,7 @@ expense-helper/mobile/
 
 ### Prerequisites
 - Flutter SDK 3.x+
-- `aibackend` running on port `8001` (or via `docker-compose up -d`)
+- `aimodel` running on port `8001` (or via `docker-compose up -d`)
 
 ### Run on Android
 ```bash

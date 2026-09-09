@@ -25,7 +25,7 @@ The desktop companion for `expense-helper` is planned as a high-performance, lig
 | **Language** | Rust (2021 edition) | Memory safety, speed, and cross-platform native compilation. |
 | **GUI Framework** | `iced` (0.12 or 0.13) | Declarative, Elm-inspired GUI architecture (`Message` -> `update` -> `view`). |
 | **Async Runtime** | `tokio` | Asynchronous I/O execution. |
-| **Networking** | `reqwest` + `serde` / `serde_json` | HTTP client communicating with `aibackend` (port `8001`). |
+| **Networking** | `reqwest` + `serde` / `serde_json` | HTTP client communicating with `aimodel` (port `8001`). |
 
 ---
 
@@ -61,7 +61,7 @@ expense-helper/
     ├── src/
     │   ├── main.rs              # Iced application entry point & event loop
     │   ├── types.rs             # Message models, ExpenseDraft, ChatMessage
-    │   ├── api.rs               # Reqwest client calls to aibackend
+    │   ├── api.rs               # Reqwest client calls to aimodel
     │   ├── state.rs             # State management & messages (enum Message)
     │   └── ui/
     │       ├── message_bubble.rs # Chat bubble renderer

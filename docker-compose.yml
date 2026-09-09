@@ -30,21 +30,41 @@ services:
     networks:
       - expense-network
 
+  aimodel:
+    build:
+      context: ./aimodel
+      dockerfile: Dockerfile
+    container_name: expense-aimodel
+    volumes:
+      - ./aimodel/models:/app/models:ro
+    ports:
+      - "8002:8002"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=8002
+      - MODEL_PATH=/app/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+      - N_GPU_LAYERS=-1
+    restart: unless-stopped
+    networks:
+      - expense-network
+
   aibackend:
     build:
       context: ./aibackend
       dockerfile: Dockerfile
     container_name: expense-aibackend
     volumes:
-      - ./aibackend/models:/app/models:ro
+      - ./aibackend:/app
     ports:
       - "8001:8001"
     environment:
       - PYTHONUNBUFFERED=1
-      - MODEL_PATH=/app/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+      - PORT=8001
+      - AIMODEL_URL=http://aimodel:8002
       - EXPENSE_API_URL=http://backend:8000
     depends_on:
       - backend
+      - aimodel
     restart: unless-stopped
     networks:
       - expense-network

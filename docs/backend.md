@@ -83,6 +83,27 @@ python3 scripts/add_recurring_expenses.py [API_URL]
 
 ---
 
+---
+
+## AI Function Calling & Tool Use Engine (`backend/ai/`)
+
+The backend embeds an agentic LLM tool-calling engine powered by `llama-cpp-python` with **GPU CUDA Offloading** (`n_gpu_layers = -1`) targeting NVIDIA GPUs (e.g. GeForce GTX 1650 Ti).
+
+### Registered Tools
+- `draft_expense(description, amount, category, date)`: Parses message into an expense draft.
+- `update_draft_field(field, value)`: Updates `amount`, `category`, `date`, or `description` in the pending draft.
+- `commit_expense(description, amount, category, date)`: Directly inserts the confirmed expense into `storage.add()`.
+- `ask_clarification(missing_field, question)`: Prompts user when information (e.g. amount) is missing.
+- `cancel_draft()`: Discards the active draft.
+
+### Endpoints
+- `POST /api/ai/chat` (alias `/api/chat/message`): Send message and trigger LLM tool selection and execution.
+- `POST /api/ai/confirm` (alias `/api/chat/confirm`): Confirm and persist active draft directly to storage.
+- `POST /api/ai/cancel` (alias `/api/chat/cancel`): Discard active draft.
+- `GET /api/ai/health`: Model status, GPU offload device info, and registered tools catalog.
+
+---
+
 ## Running Backend Locally
 
 ```bash
@@ -102,8 +123,8 @@ Interactive OpenAPI documentation is available at:
 
 ## Running Tests
 
-The test suite contains 34 tests covering model validation, edge cases, date math, week calculation, and floating-point precision:
+The test suite contains 43 pytest unit & integration tests covering model validation, date math, week calculation, floating-point precision, and AI tool calling:
 
 ```bash
-pytest backend/tests
+pytest backend/tests -v
 ```

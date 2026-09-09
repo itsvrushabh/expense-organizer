@@ -118,8 +118,8 @@ class _ChatScreenState extends State<ChatScreen> {
           _messages.add(
             ChatMessage(
               id: 'err_${DateTime.now().millisecondsSinceEpoch}',
-              text: '⚠️ Could not connect to AI backend: $e\n'
-                  'Please check that aibackend is running on ${AIChatService().baseUrl}',
+              text: '⚠️ Could not connect to AI model service: $e\n'
+                  'Please check that aimodel is running on ${AIChatService().baseUrl}',
               isUser: false,
               timestamp: DateTime.now(),
             ),
@@ -214,13 +214,13 @@ class _ChatScreenState extends State<ChatScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('AI Backend Connection'),
+        title: const Text('AI Model Connection'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Set the host and port of the aibackend service:',
+              'Set the host and port of the aimodel service:',
               style: TextStyle(fontSize: 13),
             ),
             const SizedBox(height: 12),

@@ -30,7 +30,8 @@ docker-compose down
 - 🌐 **Web Frontend**: `http://localhost:3000`
 - 🔧 **Backend API**: `http://localhost:8000`
 - 📚 **Interactive Swagger API Docs**: `http://localhost:8000/docs`
-- 🤖 **AI Backend Service**: `http://localhost:8001`
+- 🤖 **AI Model Service (`aimodel`)**: `http://localhost:8002`
+- 🧠 **AI Backend Orchestrator (`aibackend`)**: `http://localhost:8001`
 - 🩺 **AI Health Status**: `http://localhost:8001/health`
 
 ---
@@ -47,14 +48,24 @@ pip install -r requirements.txt -r requirements-dev.txt
 uvicorn main:app --reload --port 8000
 ```
 
-### 2. AI Backend (FastAPI + GGUF Engine)
+### 2. AI Model Service (FastAPI + GPU GGUF Engine)
+```bash
+cd aimodel
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Ensure model exists in aimodel/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+uvicorn app.main:app --reload --port 8002
+```
+
+### 3. AI Backend Orchestrator (FastAPI + Tool Dispatcher)
 ```bash
 cd aibackend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Ensure model exists in aibackend/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
 uvicorn app.main:app --reload --port 8001
 ```
 

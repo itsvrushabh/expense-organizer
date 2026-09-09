@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
 
 
@@ -9,19 +9,20 @@ class ExpenseDraft(BaseModel):
     date: str = Field(..., description="ISO date format YYYY-MM-DD")
 
 
-class LLMExtractionResult(BaseModel):
-    intent: str = Field(
-        default="add_expense",
-        description="add_expense, update_field, confirm, cancel, or chat",
+class ToolCall(BaseModel):
+    tool: str = Field(..., description="Name of the selected tool")
+    arguments: Dict[str, Any] = Field(default_factory=dict, description="Arguments dictionary for the tool")
+
+
+class ToolResult(BaseModel):
+    status: str = Field(
+        ...,
+        description="idle, awaiting_confirmation, saved, or cancelled",
     )
-    description: Optional[str] = None
-    amount: Optional[float] = None
-    category: Optional[str] = None
-    date: Optional[str] = None
-    field_to_update: Optional[str] = None
-    new_value: Optional[Any] = None
-    missing_fields: list[str] = Field(default_factory=list)
-    reply: Optional[str] = None
+    message: str = Field(..., description="Assistant reply message to the user")
+    draft: Optional[ExpenseDraft] = None
+    action_required: str = Field(default="none", description="confirm, clarify, or none")
+    saved_expense_id: Optional[int] = None
 
 
 class ChatRequest(BaseModel):
@@ -51,10 +52,8 @@ class ActionRequest(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    model_config = {"protected_namespaces": ()}
-
     status: str
-    model_file_exists: bool
-    model_loaded: bool
-    model_path: str
-    device: str
+    aimodel_url: str
+    aimodel_status: str
+    backend_url: str
+    backend_status: str

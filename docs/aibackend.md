@@ -1,113 +1,88 @@
-# AI Backend Microservice (`aibackend`) 🤖
+# AI Backend Orchestration Service (`aibackend`) 🤖🧠
 
-`aibackend` is a containerized microservice that converts natural language expense messages into structured expense drafts (`description`, `amount`, `category`, `date`), validates them with the user, and inserts confirmed expenses into the core SQLite database via the FastAPI backend.
-
----
-
-## 1. Features
-
-- **Smallest Effective Local Model**: Powered by `Qwen2.5-0.5B-Instruct-GGUF` (~397 MB) running locally on CPU.
-- **Conversational State Machine**: Tracks user sessions through `IDLE`, `AWAITING_CONFIRMATION`, and `SAVED` states.
-- **Interactive Field Adjustments**: Users can update fields on the fly (e.g., *"Change category to Groceries"*, *"Change date to yesterday"*, *"Make amount 50"*).
-- **Two-Step Confirmation**: Never mutates the core database without explicit user confirmation (`POST /api/chat/confirm` or replying *"yes"*).
-- **Resilient Fallback**: Automatically activates a fast heuristic parser if model weights are not loaded or in lightweight CI environments.
+`aibackend` is a dedicated microservice container running on port `8001` that acts as the **Agentic Orchestrator & Tool Caller**. It handles all application logic, conversation state machines, Python function calling / tool execution, and HTTP communications with both the pure model server (`aimodel:8002`) and the core expense database (`backend:8000`).
 
 ---
 
-## 2. Model Setup & Download
+## 1. System Architecture
 
-The model file must reside in `aibackend/models/`:
+```mermaid
+flowchart LR
+    subgraph Client["Flutter Mobile Client"]
+        Mobile["expense-helper/mobile<br/>(Android & iOS)"]
+    end
 
-- **Model File**: `qwen2.5-0.5b-instruct-q4_k_m.gguf`
-- **File Size**: ~397 MB
-- **Target Path**: `aibackend/models/qwen2.5-0.5b-instruct-q4_k_m.gguf`
+    subgraph AIB["Dedicated aibackend Service (Port 8001)"]
+        ChatRouter["FastAPI Router<br/>/api/chat/message<br/>/api/chat/confirm<br/>/api/chat/cancel<br/>/health"]
+        SessionStore["Session State Machine<br/>(IDLE, AWAITING_CONFIRMATION, SAVED)"]
+        ToolEngine["Tool Dispatcher & Logic<br/>• draft_expense<br/>• update_draft_field<br/>• commit_expense<br/>• ask_clarification<br/>• cancel_draft"]
+        ModelClient["Model Client<br/>(Calls aimodel:8002 + Fallback)"]
+        ExpenseClient["Expense Client<br/>(Calls backend:8000)"]
+        
+        ChatRouter --> SessionStore
+        SessionStore --> ModelClient
+        SessionStore --> ToolEngine
+        ToolEngine --> ExpenseClient
+    end
 
-### Download Command
-```bash
-mkdir -p aibackend/models
-curl -L \
-  "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF/resolve/main/qwen2.5-0.5b-instruct-q4_k_m.gguf" \
-  -o aibackend/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+    subgraph ModelServer["Dedicated aimodel Service (Port 8002)"]
+        AIM["FastAPI Model Server<br/>• GPU CUDA Offload (GTX 1650 Ti)<br/>• Qwen 2.5 0.5B GGUF<br/>• POST /v1/chat/completions"]
+    end
+
+    subgraph CoreBackend["Pure Core Backend (Port 8000)"]
+        CoreAPI["FastAPI REST API<br/>POST /expenses<br/>SQLite Storage"]
+    end
+
+    Mobile -->|"HTTP POST /api/chat/*"| ChatRouter
+    ModelClient -->|"Tool-selection prompt"| AIM
+    ExpenseClient -->|"Persist confirmed draft"| CoreAPI
 ```
 
 ---
 
-## 3. Running with Docker Compose
+## 2. Key Responsibilities
 
-`aibackend` is configured as a service in `docker-compose.yml`:
-
-```bash
-# Start all services including aibackend
-docker-compose up --build -d
-
-# Or view aibackend logs specifically
-docker-compose logs -f aibackend
-```
-
-Access points:
-- 🤖 **Chat Service**: `http://localhost:8001`
-- 🩺 **Health Check**: `http://localhost:8001/health`
-- 📚 **Swagger Docs**: `http://localhost:8001/docs`
+1. **Python Logic & Function Calling**:
+   - Maintains the formal JSON tool schemas (`TOOLS_SCHEMA`).
+   - Dispatches tool invocations and normalizes dates (e.g. converting `"today"` or `"yesterday"` to ISO `YYYY-MM-DD`).
+2. **Session State Management**:
+   - Manages drafts in multi-turn conversation (`awaiting_confirmation`, `saved`, `cancelled`).
+   - Supports natural language updates to draft fields (e.g. *"change amount to 50"*, *"change category to Food"*).
+3. **HTTP Client (Curl & Httpx)**:
+   - Queries `aimodel:8002/v1/chat/completions` for tool-selection decisions with graceful fallback to heuristic selection.
+   - Pushes confirmed drafts to `backend:8000/expenses`.
+4. **Resilience**:
+   - If `aimodel` is temporarily busy or unreachable, `aibackend` automatically falls back to intelligent regex and keyword heuristics so the chat app never freezes.
 
 ---
 
-## 4. API Endpoints
+## 3. Registered Tools
 
-### `POST /api/chat/message`
-Send a user message to analyze or update a draft.
-- **Request**:
-  ```json
-  {
-    "message": "Spent 45 on groceries today",
-    "session_id": "optional-client-session-uuid"
-  }
-  ```
-- **Response**:
-  ```json
-  {
-    "session_id": "session-uuid",
-    "message": "I extracted the following expense: ... Is this correct?",
-    "status": "awaiting_confirmation",
-    "action_required": "confirm",
-    "draft": {
-      "description": "Groceries",
-      "amount": 45.0,
-      "category": "Groceries",
-      "date": "2026-09-09"
-    }
-  }
-  ```
-
-### `POST /api/chat/confirm`
-Explicit button click to persist the active draft into the database.
-- **Request**: `{"session_id": "session-uuid"}`
-- **Response**:
-  ```json
-  {
-    "session_id": "session-uuid",
-    "message": "✅ Expense successfully saved to the database! (ID #42)",
-    "status": "saved",
-    "saved_expense_id": 42
-  }
-  ```
-
-### `POST /api/chat/cancel`
-Discards the active draft and resets the conversation session to `idle`.
-- **Request**: `{"session_id": "session-uuid"}`
-
-### `GET /health`
-Returns runtime status and whether the GGUF model file is present.
+| Tool | Parameters | Description |
+| :--- | :--- | :--- |
+| **`draft_expense`** | `description`, `amount`, `category`, `date` | Creates a validated draft and prompts user for confirmation. |
+| **`update_draft_field`** | `field`, `value` | Modifies an existing pending draft field (`amount`, `category`, `date`, `description`). |
+| **`commit_expense`** | `description`, `amount`, `category`, `date` | Sends HTTP POST to `http://backend:8000/expenses` to persist in DB. |
+| **`ask_clarification`** | `missing_field`, `question` | Prompts user when information is missing or ambiguous. |
+| **`cancel_draft`** | `reason` | Discards the active draft and resets session state. |
 
 ---
 
-## 5. Local Development & Testing
+## 4. Endpoints
+
+- `POST /api/chat/message`: Send user message, returns assistant response and active draft card.
+- `POST /api/chat/confirm`: Confirm and persist pending draft into core database.
+- `POST /api/chat/cancel`: Discard pending draft.
+- `POST /api/chat/reset`: Reset conversation session.
+- `GET /health`: Health status reporting connectivity to both `aimodel` and `backend`.
+
+---
+
+## 5. Local Setup & Testing
 
 ```bash
 cd aibackend
-
-# Run tests
+pip install -r requirements.txt
 pytest tests/ -v
-
-# Run locally
 uvicorn app.main:app --port 8001 --reload
 ```

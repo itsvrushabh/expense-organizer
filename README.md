@@ -13,7 +13,8 @@ All in-depth component and setup documentation is organized in the [`docs/`](doc
 - 💻 **[Web Frontend Guide](docs/frontend.md)**: Bun + React 19 + TypeScript, Excel pivot table views, spend heatmaps, and `/api` proxy.
 - 📱 **[Mobile App & Rust Engine Guide](docs/mobile.md)**: Flutter client, Material 3 gradient UI, C-FFI Rust sync engine, offline queue, and build guides.
 - 📚 **[REST API Reference](docs/api.md)**: Complete endpoint catalog, query parameters, JSON schemas, and curl examples.
-- 🤖 **[AI Backend Guide](docs/aibackend.md)**: Containerized GGUF LLM service, conversational state machine, and auto-DB ingestion.
+- 🧠 **[AI Backend Orchestrator Guide](docs/aibackend.md)**: Agentic function calling / tool dispatcher, session state machine, and DB ingestion (port 8001).
+- 🤖 **[AI Model Server Guide](docs/aimodel.md)**: Dedicated GPU-accelerated GGUF LLM inference microservice (port 8002).
 - 💬 **[Expense Helper Mobile Guide](docs/expense-helper-mobile.md)**: Multiplatform Flutter chat client (Android & iOS) with interactive draft cards.
 - 🖥️ **[Desktop Helper Roadmap (On Hold)](docs/expense-helper-desktop.md)**: Architecture and specification for planned Rust `iced` desktop client (Linux & Windows).
 
@@ -62,6 +63,9 @@ docker-compose up -d --build
 - 🌐 **Web Frontend**: [http://localhost:3000](http://localhost:3000)
 - 🔧 **Backend API**: [http://localhost:8000](http://localhost:8000)
 - 📚 **Swagger API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- 🧠 **AI Backend Orchestrator**: [http://localhost:8001](http://localhost:8001)
+- 🤖 **AI Model Server**: [http://localhost:8002](http://localhost:8002)
+- 🩺 **AI Health Status**: [http://localhost:8001/health](http://localhost:8001/health)
 
 ---
 
@@ -99,15 +103,26 @@ Run automated verification across all layers:
 # 1. Backend pytest suite (34 tests)
 pytest backend/tests
 
-# 2. Rust native sync engine tests (3 tests)
+# 2. AI Backend orchestrator pytest suite (8 tests)
+pytest aibackend/tests
+
+# 3. AI Model server pytest suite (4 tests)
+pytest aimodel/tests
+
+# 4. Rust native sync engine tests (3 tests)
 cd mobile/rust && cargo test
 
-# 3. Flutter mobile tests & analysis (7 tests)
+# 5. Flutter mobile tests & analysis (7 tests)
 cd mobile
 flutter analyze
 flutter test
 
-# 4. Web frontend TypeScript type check
+# 6. Expense Helper chat app tests & analysis (3 tests)
+cd expense-helper/mobile
+flutter analyze
+flutter test
+
+# 7. Web frontend TypeScript type check
 cd frontend
 bun x tsc --noEmit
 ```
@@ -150,19 +165,34 @@ python3 scripts/add_recurring_expenses.py [API_URL]
 ```
 expense-organizer/
 ├── docs/                         # Global documentation folder
+│   ├── aibackend.md              # AI backend orchestrator & tool-caller docs
+│   ├── aimodel.md                # GPU-accelerated AI model service docs
 │   ├── api.md                    # Detailed REST API reference & examples
 │   ├── backend.md                # FastAPI architecture & storage docs
 │   ├── frontend.md               # Bun + React 19 web application docs
 │   ├── mobile.md                 # Flutter mobile & Rust engine docs
+│   ├── expense-helper-mobile.md  # Flutter chat assistant docs
+│   ├── expense-helper-desktop.md # Desktop roadmap (on hold)
 │   └── setup.md                  # Deployment & setup walkthrough
 ├── .github/
 │   └── workflows/build-mobile.yml # CI/CD for Android & iOS builds
-├── backend/
-│   ├── main.py                   # App factory, CORS, endpoint catalog
+├── backend/                      # Pure REST core backend (port 8000)
+│   ├── main.py                   # Pure REST app factory, CORS, endpoint catalog
 │   ├── models.py                 # Pydantic schemas (Expense, ExpenseSummary)
 │   ├── storage.py                # In-memory data store
 │   ├── routers/expenses.py       # REST route handlers & aggregations
 │   ├── tests/                    # 34 pytest unit & integration tests
+│   ├── Dockerfile
+│   └── requirements.txt
+├── aibackend/                    # AI Orchestration container (port 8001)
+│   ├── app/                      # Tools schema, dispatcher, session state machine
+│   ├── tests/                    # 8 pytest tests for tools & session flows
+│   ├── Dockerfile
+│   └── requirements.txt
+├── aimodel/                      # Dedicated AI model inference server (port 8002)
+│   ├── app/                      # GGUF GPU model runner, completions & health endpoints
+│   ├── models/                   # GGUF model weights (e.g. Qwen2.5-0.5B)
+│   ├── tests/                    # 4 pytest tests for inference & health
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── frontend/
@@ -170,11 +200,13 @@ expense-organizer/
 │   ├── src/                      # React 19 TypeScript application
 │   ├── package.json
 │   └── Dockerfile
-├── mobile/
+├── mobile/                       # Primary Expense Organizer mobile client
 │   ├── lib/                      # Flutter client matching Web UI
 │   ├── rust/                     # Native C-FFI offline queue engine
 │   ├── test/                     # Flutter test suite
 │   └── android/ ios/ linux/      # Native platform runners
+├── expense-helper/               # Dedicated conversational AI companion
+│   └── mobile/                   # Flutter chat client (Android & iOS)
 ├── scripts/
 │   └── add_recurring_expenses.py # Seeding script for recurring expenses
 ├── docker-compose.yml
