@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { categoryColor } from "../colors";
 import { type Currency, formatCurrency } from "../currency";
-import type { Expense } from "../types";
+import type { Category, Expense } from "../types";
 
 interface ExpenseDraft {
   description: string;
@@ -22,11 +22,13 @@ function toDraft(expense: Expense): ExpenseDraft {
 export function DayExcelView({
   expenses,
   currency,
+  categories: availableCategories,
   onUpdate,
   onDelete,
 }: {
   expenses: Expense[];
   currency: Currency;
+  categories?: Category[];
   onUpdate: (
     id: number,
     data: { description: string; amount: number; category: string; date: string },
@@ -35,6 +37,35 @@ export function DayExcelView({
 }) {
   const [editing, setEditing] = useState<{ id: number; draft: ExpenseDraft } | null>(null);
   const categories = [...new Set(expenses.map((e) => e.category))];
+
+  const getCategoryDetails = (catName: string, expense?: Expense) => {
+    const matched = availableCategories?.find(
+      (c) => c.name.toLowerCase() === catName.toLowerCase(),
+    );
+    if (matched) {
+      return {
+        name: matched.name,
+        dotColor: matched.color,
+        bg: `${matched.color}1f`,
+        fg: matched.color,
+      };
+    }
+    if (expense?.category_color) {
+      return {
+        name: catName,
+        dotColor: expense.category_color,
+        bg: `${expense.category_color}1f`,
+        fg: expense.category_color,
+      };
+    }
+    const fallback = categoryColor(catName);
+    return {
+      name: catName,
+      dotColor: fallback.fg,
+      bg: fallback.bg,
+      fg: fallback.fg,
+    };
+  };
 
   const openEditor = (expense: Expense) => setEditing({ id: expense.id, draft: toDraft(expense) });
 
@@ -82,15 +113,19 @@ export function DayExcelView({
         <tbody>
           {categories.map((category) => {
             const categoryExpenses = expenses.filter((e) => e.category === category);
-            const color = categoryColor(category);
+            const catDetails = getCategoryDetails(category, categoryExpenses[0]);
             return categoryExpenses.map((expense, idx) => (
               <tr key={expense.id}>
                 {idx === 0 && (
                   <td rowSpan={categoryExpenses.length} className="category-cell">
                     <span
                       className="category-chip"
-                      style={{ background: color.bg, color: color.fg }}
+                      style={{ background: catDetails.bg, color: catDetails.fg }}
                     >
+                      <span
+                        className="category-chip-dot"
+                        style={{ backgroundColor: catDetails.dotColor }}
+                      />
                       {category}
                     </span>
                   </td>
@@ -156,8 +191,7 @@ export function DayExcelView({
               </label>
               <label>
                 Category
-                <input
-                  type="text"
+                <select
                   value={editing.draft.category}
                   onChange={(e) =>
                     setEditing({
@@ -165,7 +199,35 @@ export function DayExcelView({
                       draft: { ...editing.draft, category: e.target.value },
                     })
                   }
-                />
+                >
+                  {(availableCategories && availableCategories.length > 0
+                    ? availableCategories
+                    : [
+                        { id: 1, name: "Food", color: "#FF5722", icon: "utensils", is_active: true },
+                        { id: 2, name: "Groceries", color: "#4CAF50", icon: "shopping-cart", is_active: true },
+                        { id: 3, name: "Transport", color: "#2196F3", icon: "car", is_active: true },
+                        { id: 4, name: "Shopping", color: "#E91E63", icon: "shopping-bag", is_active: true },
+                        { id: 5, name: "Entertainment", color: "#9C27B0", icon: "film", is_active: true },
+                        { id: 6, name: "Utilities", color: "#FF9800", icon: "zap", is_active: true },
+                        { id: 7, name: "Health", color: "#F44336", icon: "heart", is_active: true },
+                        { id: 8, name: "Travel", color: "#00BCD4", icon: "plane", is_active: true },
+                        { id: 9, name: "Online", color: "#3F51B5", icon: "globe", is_active: true },
+                        { id: 10, name: "Other", color: "#607D8B", icon: "help-circle", is_active: true },
+                      ]
+                  ).map((c) => (
+                    <option key={c.id || c.name} value={c.name}>
+                      {c.name}
+                    </option>
+                  ))}
+                  {editing.draft.category &&
+                    !availableCategories?.some(
+                      (c) => c.name.toLowerCase() === editing.draft.category.toLowerCase(),
+                    ) && (
+                      <option value={editing.draft.category}>
+                        {editing.draft.category}
+                      </option>
+                    )}
+                </select>
               </label>
               <label>
                 Date

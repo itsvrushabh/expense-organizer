@@ -1,9 +1,10 @@
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.schemas import ExpenseDraft, ToolCall, ToolResult
 from app.expense_client import (
+    fetch_expense_summary,
     insert_expense_to_db,
     normalize_iso_date,
     refresh_exchange_rates_in_backend,
@@ -128,6 +129,53 @@ TOOLS_SCHEMA = [
             "parameters": {
                 "type": "object",
                 "properties": {},
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "query_expense_summary",
+            "description": "Queries and summarizes expenses from the database based on filters like time period (month, year, week, or relative like 'this_month', 'last_month', 'today'), category/categories, and target currency (USD, INR, EUR, JPY, GBP, CNY).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "year": {
+                        "type": "integer",
+                        "description": "Calendar year to filter by (e.g. 2026)",
+                    },
+                    "month": {
+                        "type": "integer",
+                        "description": "Month number to filter by (1-12)",
+                    },
+                    "week": {
+                        "type": "integer",
+                        "description": "ISO week number (1-53)",
+                    },
+                    "relative_period": {
+                        "type": "string",
+                        "enum": [
+                            "today",
+                            "yesterday",
+                            "this_week",
+                            "last_week",
+                            "this_month",
+                            "last_month",
+                            "this_year",
+                            "last_year",
+                        ],
+                        "description": "Relative time period shortcut",
+                    },
+                    "categories": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of categories to filter (e.g. ['Online', 'Food'])",
+                    },
+                    "currency": {
+                        "type": "string",
+                        "description": "Target currency code for summary total (e.g. 'USD', 'INR', 'EUR', 'JPY', 'GBP', 'CNY')",
+                    },
+                },
             },
         },
     },
@@ -295,6 +343,144 @@ async def tool_refresh_exchange_rates() -> ToolResult:
     )
 
 
+async def tool_query_expense_summary(
+    year: int | None = None,
+    month: int | None = None,
+    week: int | None = None,
+    relative_period: str | None = None,
+    start_date: str | None = None,
+    end_date: str | None = None,
+    categories: list[str] | None = None,
+    currency: str = "USD",
+    reference_date: datetime | None = None,
+) -> ToolResult:
+    """Queries expense summary and details from core database."""
+    ref_date = reference_date or datetime.now()
+
+    resolved_year = year
+    resolved_month = month
+    resolved_week = week
+    resolved_start_date = start_date
+    resolved_end_date = end_date
+
+    period_desc = ""
+    if relative_period:
+        rel = relative_period.lower().strip()
+        if rel == "today":
+            resolved_start_date = ref_date.strftime("%Y-%m-%d")
+            resolved_end_date = resolved_start_date
+            period_desc = "today"
+        elif rel == "yesterday":
+            y = ref_date - timedelta(days=1)
+            resolved_start_date = y.strftime("%Y-%m-%d")
+            resolved_end_date = resolved_start_date
+            period_desc = "yesterday"
+        elif rel == "this_week":
+            start = ref_date - timedelta(days=ref_date.weekday())
+            end = start + timedelta(days=6)
+            resolved_start_date = start.strftime("%Y-%m-%d")
+            resolved_end_date = end.strftime("%Y-%m-%d")
+            period_desc = "this week"
+        elif rel == "last_week":
+            start = ref_date - timedelta(days=ref_date.weekday() + 7)
+            end = start + timedelta(days=6)
+            resolved_start_date = start.strftime("%Y-%m-%d")
+            resolved_end_date = end.strftime("%Y-%m-%d")
+            period_desc = "last week"
+        elif rel == "this_month":
+            resolved_year = ref_date.year
+            resolved_month = ref_date.month
+            period_desc = ref_date.strftime("%B %Y")
+        elif rel == "last_month":
+            if ref_date.month == 1:
+                resolved_year = ref_date.year - 1
+                resolved_month = 12
+            else:
+                resolved_year = ref_date.year
+                resolved_month = ref_date.month - 1
+            last_m_dt = datetime(resolved_year, resolved_month, 1)
+            period_desc = last_m_dt.strftime("%B %Y")
+        elif rel == "this_year":
+            resolved_year = ref_date.year
+            period_desc = str(resolved_year)
+        elif rel == "last_year":
+            resolved_year = ref_date.year - 1
+            period_desc = str(resolved_year)
+
+    if not period_desc:
+        if resolved_month and resolved_year:
+            try:
+                period_desc = datetime(resolved_year, resolved_month, 1).strftime("%B %Y")
+            except Exception:
+                period_desc = f"{resolved_year}-{resolved_month:02d}"
+        elif resolved_month:
+            try:
+                period_desc = datetime(2000, resolved_month, 1).strftime("%B")
+            except Exception:
+                period_desc = f"Month {resolved_month}"
+        elif resolved_year:
+            period_desc = str(resolved_year)
+        elif resolved_week:
+            period_desc = f"Week {resolved_week}"
+        elif resolved_start_date and resolved_end_date:
+            if resolved_start_date == resolved_end_date:
+                period_desc = resolved_start_date
+            else:
+                period_desc = f"{resolved_start_date} to {resolved_end_date}"
+        else:
+            period_desc = "all time"
+
+    cat_list = [c.strip() for c in categories] if categories else None
+    summary = await fetch_expense_summary(
+        year=resolved_year,
+        month=resolved_month,
+        week=resolved_week,
+        start_date=resolved_start_date,
+        end_date=resolved_end_date,
+        categories=cat_list,
+        currency=currency or "USD",
+    )
+
+    if summary is None:
+        return ToolResult(
+            status="idle",
+            message="⚠️ Could not connect to the backend database to retrieve expense summary.",
+            action_required="none",
+        )
+
+    total = float(summary.get("total", 0.0))
+    count = int(summary.get("count", 0))
+    curr_code = summary.get("currency", currency or "USD")
+    sym = summary.get("currency_symbol", "$")
+    expenses = summary.get("expenses", [])
+
+    cat_desc = f" for category **{', '.join(cat_list)}**" if cat_list else ""
+    lines = [
+        f"📊 **Expense Summary ({period_desc}){cat_desc}**:",
+        f"• **Total Spent**: {sym}{total:,.2f} {curr_code}",
+        f"• **Transactions**: {count}",
+    ]
+
+    if count > 0:
+        lines.append("\n**Expenses:**")
+        for exp in expenses[:10]:
+            desc = exp.get("description", "Expense")
+            amt = float(exp.get("amount", 0.0))
+            cat = exp.get("category", "Other")
+            d = exp.get("date", "")
+            lines.append(f"• `{d}`: **{desc}** ({cat}) — {sym}{amt:,.2f}")
+        if count > 10:
+            lines.append(f"• *... and {count - 10} more expenses.*")
+    else:
+        lines.append("\n*No expenses found matching the criteria.*")
+
+    return ToolResult(
+        status="idle",
+        message="\n".join(lines),
+        action_required="none",
+    )
+
+
 async def execute_tool(
     tool_call: ToolCall,
     current_draft: ExpenseDraft | None = None,
@@ -342,6 +528,25 @@ async def execute_tool(
         return tool_cancel_draft(reason=args.get("reason"))
     elif t_name == "refresh_exchange_rates":
         return await tool_refresh_exchange_rates()
+    elif t_name == "query_expense_summary":
+        raw_cats = args.get("categories")
+        if isinstance(raw_cats, str):
+            cats = [raw_cats]
+        elif isinstance(raw_cats, list):
+            cats = raw_cats
+        else:
+            cats = None
+        return await tool_query_expense_summary(
+            year=args.get("year"),
+            month=args.get("month"),
+            week=args.get("week"),
+            relative_period=args.get("relative_period"),
+            start_date=args.get("start_date"),
+            end_date=args.get("end_date"),
+            categories=cats,
+            currency=args.get("currency", "USD"),
+            reference_date=reference_date,
+        )
     else:
         logger.warning("Unknown tool call: %s", t_name)
         return ToolResult(

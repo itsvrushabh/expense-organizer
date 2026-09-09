@@ -172,3 +172,42 @@ async def test_regression_session_manager_confirm_cancel_edge_cases():
     session.pending_draft = ExpenseDraft(description="X", amount=5.0, category="Food", date="2026-09-10")
     manager.reset_session("sess-to-reset")
     assert "sess-to-reset" not in manager.sessions
+
+
+@pytest.mark.anyio
+async def test_regression_fetch_expense_summary_error_handling():
+    from app.expense_client import fetch_expense_summary
+
+    mock_500 = AsyncMock()
+    mock_500.status_code = 500
+    mock_500.text = "Internal error"
+    with patch("httpx.AsyncClient.get", return_value=mock_500):
+        res = await fetch_expense_summary(year=2026, month=2)
+        assert res is None
+
+    with patch("httpx.AsyncClient.get", side_effect=Exception("Connection refused")):
+        res = await fetch_expense_summary(year=2026, month=2)
+        assert res is None
+
+
+@pytest.mark.anyio
+@patch("app.tools.fetch_expense_summary", new_callable=AsyncMock)
+async def test_regression_query_expense_summary_empty_results(mock_fetch):
+    mock_fetch.return_value = {
+        "total": 0.0,
+        "count": 0,
+        "currency": "USD",
+        "currency_symbol": "$",
+        "expenses": [],
+    }
+
+    res = await execute_tool(
+        ToolCall(
+            tool="query_expense_summary",
+            arguments={"relative_period": "yesterday"},
+        )
+    )
+    assert res.status == "idle"
+    assert "No expenses found" in res.message
+    assert "yesterday" in res.message
+

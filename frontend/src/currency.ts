@@ -35,3 +35,18 @@ export function formatCurrency(amount: number | undefined, currency: Currency): 
   if (amount === undefined) return "-";
   return `${SYMBOLS[currency]}${(amount * RATES[currency]).toFixed(2)}`;
 }
+
+export function updateLiveRates(
+  currencies: Array<{ code: string; exchange_rate: number; symbol?: string }>,
+): void {
+  for (const c of currencies) {
+    const code = c.code as Currency;
+    if (RATES[code] !== undefined && typeof c.exchange_rate === "number" && c.exchange_rate > 0) {
+      RATES[code] = c.exchange_rate;
+    }
+    if (c.symbol && SYMBOLS[code] !== undefined) {
+      SYMBOLS[code] = c.symbol;
+    }
+  }
+}
+

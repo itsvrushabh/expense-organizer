@@ -59,4 +59,23 @@ describe('UI navigation and date-stepping logic', () => {
     expect(submissionPayload.category).toBe('Food')
     expect(submissionPayload.date).toBe('2026-09-10')
   })
+
+  it('filters active categories and resolves category badge colors accurately', () => {
+    const backendCategories = [
+      { id: 1, name: 'Food', icon: 'utensils', color: '#FF5722', is_active: true },
+      { id: 2, name: 'Online', icon: 'globe', color: '#3F51B5', is_active: true },
+      { id: 3, name: 'ArchivedCat', icon: 'archive', color: '#9E9E9E', is_active: false },
+    ]
+
+    const activeCategories = backendCategories.filter((c) => c.is_active)
+    expect(activeCategories.length).toBe(2)
+    expect(activeCategories.some((c) => c.name === 'ArchivedCat')).toBe(false)
+
+    // Resolve color badge for selection
+    const selectedName = 'online'
+    const matched = activeCategories.find((c) => c.name.toLowerCase() === selectedName.toLowerCase())
+    expect(matched).toBeDefined()
+    expect(matched?.color).toBe('#3F51B5')
+    expect(matched?.name).toBe('Online')
+  })
 })

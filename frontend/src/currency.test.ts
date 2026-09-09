@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { CURRENCIES, formatCurrency, RATES, SYMBOLS, toBase, type Currency } from './currency'
+import { CURRENCIES, formatCurrency, RATES, SYMBOLS, toBase, updateLiveRates, type Currency } from './currency'
 
 describe('currency helpers', () => {
   it('has all 6 currencies configured with positive rates and symbols', () => {
@@ -39,4 +39,21 @@ describe('currency helpers', () => {
     expect(formatCurrency(undefined, 'USD')).toBe('-')
     expect(formatCurrency(undefined, 'INR')).toBe('-')
   })
+
+  it('updateLiveRates dynamically updates rates and symbols from backend feed', () => {
+    const originalInrRate = RATES.INR
+    updateLiveRates([
+      { code: 'INR', exchange_rate: 94.84, symbol: '₹' },
+      { code: 'EUR', exchange_rate: 0.86, symbol: '€' },
+    ])
+    expect(RATES.INR).toBe(94.84)
+    expect(RATES.EUR).toBe(0.86)
+
+    // Verify formatCurrency uses new live rate
+    expect(formatCurrency(10, 'INR')).toBe('₹948.40')
+
+    // Reset back
+    updateLiveRates([{ code: 'INR', exchange_rate: originalInrRate }, { code: 'EUR', exchange_rate: 0.92 }])
+  })
 })
+

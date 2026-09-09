@@ -101,17 +101,38 @@
   grid-template-columns: 2fr 1fr 1fr 1.5fr auto;
   gap: 10px;
 }
-.add-expense-form input {
+.add-expense-form input,
+.add-expense-form select {
   padding: 12px;
   border: 2px solid var(--line);
   border-radius: 8px;
   font-size: 14px;
   transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: white;
+  width: 100%;
 }
-.add-expense-form input:focus {
+.add-expense-form input:focus,
+.add-expense-form select:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+.category-select-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.category-select-container select {
+  padding-left: 30px;
+}
+.category-color-badge {
+  position: absolute;
+  left: 10px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
 }
 .add-expense-form button[type="submit"] {
   padding: 12px 24px;
@@ -342,7 +363,9 @@
 
 /* ============ category chips ============ */
 .category-chip {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 0.72em;
   font-weight: 700;
   text-transform: uppercase;
@@ -350,6 +373,13 @@
   border-radius: 999px;
   padding: 3px 10px;
   white-space: nowrap;
+}
+.category-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 /* ============ grid view cells ============ */
