@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+
 import '../models/queue_item.dart';
 import 'api_service.dart';
 import 'rust_bridge.dart';
@@ -20,15 +22,14 @@ class SyncService extends ChangeNotifier {
   DateTime? _lastSyncTime;
   String? _lastError;
 
-  SyncService({
-    ApiService? apiService,
-    RustBridge? rustBridge,
-  })  : apiService = apiService ?? ApiService(),
-        rustBridge = rustBridge ?? RustBridge.instance;
+  SyncService({ApiService? apiService, RustBridge? rustBridge})
+    : apiService = apiService ?? ApiService(),
+      rustBridge = rustBridge ?? RustBridge.instance;
 
   bool get isOnline => _isOnline;
   bool get isSyncing => _isSyncing;
-  int get pendingCount => _queueItems.where((i) => i.isPending || i.isFailed).length;
+  int get pendingCount =>
+      _queueItems.where((i) => i.isPending || i.isFailed).length;
   List<QueueItem> get queueItems => List.unmodifiable(_queueItems);
   DateTime? get lastSyncTime => _lastSyncTime;
   String? get lastError => _lastError;
@@ -83,7 +84,9 @@ class SyncService extends ChangeNotifier {
   Future<bool> checkConnectivity() async {
     // Non-blocking async Dart HTTP health check for periodic heartbeats
     // prevents any UI thread freezes when server is unreachable.
-    final online = await apiService.checkHealth(timeout: const Duration(milliseconds: 2000));
+    final online = await apiService.checkHealth(
+      timeout: const Duration(milliseconds: 2000),
+    );
 
     final changed = online != _isOnline;
     _isOnline = online;
@@ -272,7 +275,9 @@ class SyncService extends ChangeNotifier {
       final content = await file.readAsString();
       final list = jsonDecode(content);
       if (list is List) {
-        return list.map((e) => QueueItem.fromJson(e as Map<String, dynamic>)).toList();
+        return list
+            .map((e) => QueueItem.fromJson(e as Map<String, dynamic>))
+            .toList();
       }
     } catch (e) {
       debugPrint('Error reading queue file: $e');
@@ -287,7 +292,9 @@ class SyncService extends ChangeNotifier {
       if (!parent.existsSync()) {
         parent.createSync(recursive: true);
       }
-      await file.writeAsString(jsonEncode(items.map((i) => i.toJson()).toList()));
+      await file.writeAsString(
+        jsonEncode(items.map((i) => i.toJson()).toList()),
+      );
     } catch (e) {
       debugPrint('Error writing queue file: $e');
     }

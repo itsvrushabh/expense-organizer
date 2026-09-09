@@ -1,0 +1,64 @@
+name: CI / Success
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  actions: read
+  checks: read
+  contents: read
+
+concurrency:
+  group: ci-success-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  aggregate:
+    name: ci-success
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check all CI sub-workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          workflows=(
+            ci-python.yml
+            ci-frontend.yml
+            ci-flutter.yml
+            ci-rust.yml
+            ci-services.yml
+          )
+          for attempt in {1..30}; do
+            pending=0
+            failed=0
+            echo "CI status poll ${attempt}/30 for ${COMMIT_SHA} (${EVENT_NAME})"
+            for workflow in "${workflows[@]}"; do
+              run=$(gh api \
+                "/repos/${REPOSITORY}/actions/workflows/${workflow}/runs?head_sha=${COMMIT_SHA}&event=${EVENT_NAME}&per_page=20" \
+                --jq '[.workflow_runs[] | select(.head_sha == env.COMMIT_SHA and .event == env.EVENT_NAME)] | sort_by(.run_number) | reverse | .[0] // {}')
+              status=$(jq -r '.status // "missing"' <<<"${run}")
+              conclusion=$(jq -r '.conclusion // "pending"' <<<"${run}")
+              echo "${workflow}: status=${status}, conclusion=${conclusion}"
+              if [[ "${status}" != completed ]]; then
+                pending=1
+              elif [[ "${conclusion}" != success ]]; then
+                failed=1
+              fi
+            done
+            if [[ ${pending} -eq 0 ]]; then
+              if [[ ${failed} -ne 0 ]]; then
+                echo "One or more CI sub-workflows did not pass."
+                exit 1
+              fi
+              echo "All CI sub-workflows passed."
+              exit 0
+            fi
+            sleep 20
+          done
+          echo "Timed out waiting for all CI sub-workflows."
+          exit 1

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../models/chat_models.dart';
 
 class ExpenseDraftCard extends StatelessWidget {
@@ -49,7 +50,10 @@ class ExpenseDraftCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencyFormatter = NumberFormat.currency(symbol: '\$', decimalDigits: 2);
+    final currencyFormatter = NumberFormat.currency(
+      symbol: '\$',
+      decimalDigits: 2,
+    );
 
     return Container(
       margin: const EdgeInsets.only(top: 8, bottom: 4),
@@ -94,7 +98,10 @@ class ExpenseDraftCard extends StatelessWidget {
               ),
               if (savedExpenseId != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
@@ -135,7 +142,9 @@ class ExpenseDraftCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: isSaved ? Colors.green.shade700 : theme.colorScheme.primary,
+                  color: isSaved
+                      ? Colors.green.shade700
+                      : theme.colorScheme.primary,
                 ),
               ),
             ],
@@ -152,9 +161,14 @@ class ExpenseDraftCard extends StatelessWidget {
                 padding: EdgeInsets.zero,
                 labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                 avatar: Icon(_getCategoryIcon(draft.category), size: 14),
-                label: Text(draft.category, style: const TextStyle(fontSize: 12)),
+                label: Text(
+                  draft.category,
+                  style: const TextStyle(fontSize: 12),
+                ),
                 backgroundColor: theme.colorScheme.surface,
-                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+                side: BorderSide(
+                  color: theme.dividerColor.withValues(alpha: 0.3),
+                ),
               ),
               Chip(
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -163,7 +177,9 @@ class ExpenseDraftCard extends StatelessWidget {
                 avatar: const Icon(Icons.calendar_today, size: 13),
                 label: Text(draft.date, style: const TextStyle(fontSize: 12)),
                 backgroundColor: theme.colorScheme.surface,
-                side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.3)),
+                side: BorderSide(
+                  color: theme.dividerColor.withValues(alpha: 0.3),
+                ),
               ),
             ],
           ),
@@ -199,7 +215,9 @@ class ExpenseDraftCard extends StatelessWidget {
                       label: const Text('Cancel'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.redAccent,
-                        side: BorderSide(color: Colors.redAccent.withValues(alpha: 0.5)),
+                        side: BorderSide(
+                          color: Colors.redAccent.withValues(alpha: 0.5),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),

@@ -30,7 +30,8 @@ docker-compose down
 
 > [!NOTE]
 > **Zero Unnecessary Port Exposure**:
-> - Both `backend` (internal port `8000`) and `aimodel` (internal port `8002`) operate strictly on the internal Docker bridge network (`expense-network`) with **zero host port bindings**.
+> - `backend` (internal port `8000`), `aimodel` (internal port `8002`), and `db` (PostgreSQL internal port `5432`) operate strictly on the internal Docker bridge network (`expense-network`) with **zero host port bindings**.
+> - PostgreSQL database files are persisted on the host machine at `./postgres_data` outside the container and are consumed exclusively by `backend`.
 > - Clients and mobile apps communicate through the frontend reverse proxy (`http://localhost:13000/api`) or interact with the AI assistant at `http://localhost:18001`.
 
 ---
@@ -93,6 +94,13 @@ flutter run
 
 ### Backend
 - `PORT` - Port to bind the Uvicorn server (default: `8000`)
+- `DATABASE_URL` - PostgreSQL connection string (default in Docker: `postgresql://postgres:postgres@db:5432/expenses`). If unset, falls back to in-memory storage for lightweight testing.
+
+### PostgreSQL Database (`db`)
+- `POSTGRES_USER` - Database username (default: `postgres`)
+- `POSTGRES_PASSWORD` - Database password (default: `postgres`)
+- `POSTGRES_DB` - Database name (default: `expenses`)
+- Host storage mount: `./postgres_data:/var/lib/postgresql/data`
 
 ### Frontend
 - `PORT` - Internal port to bind the Bun server (default: `3000`, published as `13000:3000`)
@@ -112,6 +120,7 @@ docker-compose logs -f
 
 # View specific service logs
 docker-compose logs -f backend
+docker-compose logs -f db
 docker-compose logs -f frontend
 docker-compose logs -f aibackend
 docker-compose logs -f aimodel
@@ -119,22 +128,32 @@ docker-compose logs -f aimodel
 
 ## GitHub Actions CI and Releases
 
-Every commit pushed to any branch and every pull request runs the fast checks in
-`.github/workflows/ci.yml`. These checks cover Python tests and Ruff formatting/linting,
-frontend TypeScript and Biome checks, both Flutter applications, and the Rust engine.
+Every commit pushed to any branch and every pull request runs the CI sub-workflows in
+`.github/workflows/`. The visible workflows are `ci-python.yml`, `ci-frontend.yml`,
+`ci-flutter.yml`, `ci-rust.yml`, and `ci-services.yml`. Together they cover Python tests
+and Ruff formatting/linting, frontend TypeScript and Biome checks, both Flutter
+applications, the Rust engine, Docker configuration, and lightweight service probes.
 
-The same workflow runs lightweight backend/frontend Docker startup probes. The full model
-health check is reserved for release or manually triggered runs because it requires the
-GGUF model artifact and is not suitable for every commit.
+`ci-success.yml` starts with the sub-workflows, polls their exact commit and event until
+they complete, and provides the aggregate branch-protection check. Require the displayed
+`CI / Success / ci-success` check in the repository branch rules.
+
+`ci-services.yml` runs lightweight backend/frontend Docker startup probes. Model health is
+not currently run by CI or release publishing because it requires the GGUF model artifact
+and GPU support; mount the model separately when deploying `aimodel`.
 
 Version tags matching `vMAJOR.MINOR.PATCH` trigger `.github/workflows/release.yml`. The
-release workflow builds Android APKs and unsigned iOS IPAs for both mobile applications,
-publishes the four service images to GitHub Container Registry, and attaches the mobile
-artifacts to the GitHub release. Temporary mobile artifacts are retained for seven days;
-release attachments are retained by GitHub Releases.
+release workflow builds preview Android APKs and unsigned iOS IPAs for both mobile
+applications, publishes immutable version-tagged service images to GitHub Container
+Registry, and attaches the mobile artifacts to the GitHub release. Temporary mobile
+artifacts are retained for seven days; release attachments are retained by GitHub Releases.
+The `aimodel` image requires the GGUF model to be mounted separately at `/app/models`.
+Manual release runs are validation-only and do not publish images or create releases.
+Only valid `vMAJOR.MINOR.PATCH` tags publish.
 
 Release publishing requires the workflow's `GITHUB_TOKEN` package and release permissions.
-Signed iOS builds require Apple signing secrets and can be added without changing the
-ordinary CI workflow. Dependabot opens weekly dependency pull requests for Python, Bun/npm,
-Cargo, Flutter/Dart, Docker, and GitHub Actions; patch/minor updates are grouped while
-major upgrades remain separate.
+Android currently uses the repository's preview signing configuration; production Android
+distribution requires signing secrets. Signed iOS builds require Apple signing secrets and
+reviewed native platform projects. Dependabot opens weekly dependency pull requests for
+Python, Bun/npm, Cargo, Flutter/Dart, Docker, and GitHub Actions; patch/minor updates are
+grouped while major upgrades remain separate.

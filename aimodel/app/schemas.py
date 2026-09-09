@@ -1,4 +1,5 @@
-from typing import Optional, List, Dict, Any
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -8,10 +9,10 @@ class ChatMessage(BaseModel):
 
 
 class ChatCompletionRequest(BaseModel):
-    messages: List[ChatMessage] = Field(..., description="Chat messages list")
+    messages: list[ChatMessage] = Field(..., description="Chat messages list")
     temperature: float = Field(default=0.1, ge=0.0, le=2.0)
     max_tokens: int = Field(default=256, ge=1, le=4096)
-    response_format: Optional[Dict[str, Any]] = Field(
+    response_format: dict[str, Any] | None = Field(
         default=None, description="e.g. {'type': 'json_object'}"
     )
 
@@ -27,8 +28,8 @@ class ChatCompletionResponse(BaseModel):
     object: str = "chat.completion"
     created: int = 0
     model: str = "qwen2.5-0.5b-instruct"
-    choices: List[ChatCompletionChoice]
-    usage: Optional[Dict[str, int]] = None
+    choices: list[ChatCompletionChoice]
+    usage: dict[str, int] | None = None
 
 
 class CompletionRequest(BaseModel):
@@ -49,4 +50,3 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     model_path: str
     device: str
-

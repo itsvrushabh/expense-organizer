@@ -1,0 +1,35 @@
+name: CI / Frontend
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-frontend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Bun, Biome, and TypeScript
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.0"
+      - name: Install dependencies
+        working-directory: frontend
+        run: bun install --frozen-lockfile
+      - name: Check formatting
+        working-directory: frontend
+        run: bunx --bun @biomejs/biome@1.9.4 check --formatter-enabled=true --linter-enabled=false .
+      - name: Check lint
+        working-directory: frontend
+        run: bunx --bun @biomejs/biome@1.9.4 lint . --only=correctness/noUnusedImports --only=correctness/noUnusedVariables
+      - name: Type check
+        working-directory: frontend
+        run: bun x tsc --noEmit

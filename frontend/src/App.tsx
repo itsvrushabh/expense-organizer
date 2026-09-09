@@ -1,116 +1,163 @@
-import { useState, useEffect, type FormEvent } from 'react'
-import './App.css'
-import { api } from './api'
-import { CURRENCIES, SYMBOLS, toBase, type Currency } from './currency'
-import { parseLocalDate, stepDate, toDateInput } from './dates'
-import type { Expense, ViewMode } from './types'
-import { DayExcelView } from './views/DayExcelView'
-import { ExcelGridView } from './views/ExcelGridView'
-import { Grid6x6View } from './views/Grid6x6View'
+import { type FormEvent, useEffect, useState } from "react";
+import "./App.css";
+import { api } from "./api";
+import { CURRENCIES, type Currency, SYMBOLS, toBase, updateLiveRates } from "./currency";
+import { parseLocalDate, stepDate, toDateInput } from "./dates";
+import type { Category, Expense, ViewMode } from "./types";
+import { DayExcelView } from "./views/DayExcelView";
+import { ExcelGridView } from "./views/ExcelGridView";
+import { Grid6x6View } from "./views/Grid6x6View";
+
+const DEFAULT_CATEGORIES: Category[] = [
+  { id: 1, name: "Food", icon: "utensils", color: "#FF5722", is_active: true },
+  { id: 2, name: "Groceries", icon: "shopping-cart", color: "#4CAF50", is_active: true },
+  { id: 3, name: "Transport", icon: "car", color: "#2196F3", is_active: true },
+  { id: 4, name: "Shopping", icon: "shopping-bag", color: "#E91E63", is_active: true },
+  { id: 5, name: "Entertainment", icon: "film", color: "#9C27B0", is_active: true },
+  { id: 6, name: "Utilities", icon: "zap", color: "#FF9800", is_active: true },
+  { id: 7, name: "Health", icon: "heart", color: "#F44336", is_active: true },
+  { id: 8, name: "Travel", icon: "plane", color: "#00BCD4", is_active: true },
+  { id: 9, name: "Online", icon: "globe", color: "#3F51B5", is_active: true },
+  { id: 10, name: "Other", icon: "help-circle", color: "#607D8B", is_active: true },
+];
 
 const emptyForm = () => ({
-  description: '',
-  amount: '',
-  category: '',
+  description: "",
+  amount: "",
+  category: "Food",
   date: toDateInput(new Date()),
-})
+});
 
 function App() {
-  const [currency, setCurrency] = useState<Currency>('INR')
+  const [currency, setCurrency] = useState<Currency>("INR");
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
 
-  const [expenses, setExpenses] = useState<Expense[]>([])
-  const [viewMode, setViewMode] = useState<ViewMode>('month')
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  const [newExpense, setNewExpense] = useState(emptyForm)
-  const [error, setError] = useState<string | null>(null)
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>("month");
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [newExpense, setNewExpense] = useState(emptyForm);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchExpenses()
-  }, [viewMode, selectedDate])
+    // Load dynamic categories from backend
+    api
+      .getCategories()
+      .then((cats) => {
+        if (cats && cats.length > 0) {
+          setCategories(cats);
+        }
+      })
+      .catch((err) => console.warn("Could not fetch categories:", err));
+
+    // Load live exchange rates from backend
+    api
+      .getCurrencies()
+      .then((currs) => {
+        if (currs && currs.length > 0) {
+          updateLiveRates(currs);
+        }
+      })
+      .catch((err) => console.warn("Could not fetch live currencies:", err));
+  }, []);
+
+  useEffect(() => {
+    fetchExpenses();
+  }, [viewMode, selectedDate]);
 
   const fetchExpenses = async () => {
     try {
-      let path = ''
-      if (viewMode === 'day') {
-        path = `/expenses/day/${toDateInput(selectedDate)}`
-      } else if (viewMode === 'week') {
-        path = `/expenses/week/date/${toDateInput(selectedDate)}?start_sunday=true`
-      } else if (viewMode === 'month') {
-        path = `/expenses/month/${selectedDate.getFullYear()}/${selectedDate.getMonth() + 1}`
+      let path = "";
+      if (viewMode === "day") {
+        path = `/expenses/day/${toDateInput(selectedDate)}`;
+      } else if (viewMode === "week") {
+        path = `/expenses/week/date/${toDateInput(selectedDate)}?start_sunday=true`;
+      } else if (viewMode === "month") {
+        path = `/expenses/month/${selectedDate.getFullYear()}/${selectedDate.getMonth() + 1}`;
       } else {
-        path = `/expenses/year/${selectedDate.getFullYear()}`
+        path = `/expenses/year/${selectedDate.getFullYear()}`;
       }
-      const data = await api.getExpenses(path)
-      let filteredExpenses = data.expenses || []
-      if (viewMode === 'week') {
-        const start = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
-        start.setDate(start.getDate() - start.getDay())
-        const end = new Date(start)
-        end.setDate(end.getDate() + 7)
+      const data = await api.getExpenses(path);
+      let filteredExpenses = data.expenses || [];
+      if (viewMode === "week") {
+        const start = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+        );
+        start.setDate(start.getDate() - start.getDay());
+        const end = new Date(start);
+        end.setDate(end.getDate() + 7);
         filteredExpenses = filteredExpenses.filter((e) => {
-          const d = parseLocalDate(e.date)
-          return d >= start && d < end
-        })
+          const d = parseLocalDate(e.date);
+          return d >= start && d < end;
+        });
       }
-      setExpenses(filteredExpenses)
-      setError(null)
+      setExpenses(filteredExpenses);
+      setError(null);
     } catch (err) {
-      console.error('Error fetching expenses:', err)
-      setError('Could not load expenses')
+      console.error("Error fetching expenses:", err);
+      setError("Could not load expenses");
     }
-  }
+  };
 
   const addExpense = async (e: FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
       await api.addExpense({
         ...newExpense,
-        amount: toBase(parseFloat(newExpense.amount), currency),
-      })
-      setNewExpense(emptyForm())
-      setError(null)
-      fetchExpenses()
+        amount: toBase(Number.parseFloat(newExpense.amount), currency),
+      });
+      setNewExpense(emptyForm());
+      setError(null);
+      fetchExpenses();
     } catch (err) {
-      console.error('Error adding expense:', err)
-      setError('Could not add expense')
+      console.error("Error adding expense:", err);
+      setError("Could not add expense");
     }
-  }
+  };
 
   const updateExpense = async (
     id: number,
     data: { description: string; amount: number; category: string; date: string },
   ) => {
     try {
-      await api.updateExpense(id, data)
-      setError(null)
-      fetchExpenses()
+      await api.updateExpense(id, data);
+      setError(null);
+      fetchExpenses();
     } catch (err) {
-      console.error('Error updating expense:', err)
-      setError('Could not update expense')
+      console.error("Error updating expense:", err);
+      setError("Could not update expense");
     }
-  }
+  };
 
   const removeExpense = async (id: number) => {
     try {
-      await api.deleteExpense(id)
-      setError(null)
-      fetchExpenses()
+      await api.deleteExpense(id);
+      setError(null);
+      fetchExpenses();
     } catch (err) {
-      console.error('Error deleting expense:', err)
-      setError('Could not delete expense')
+      console.error("Error deleting expense:", err);
+      setError("Could not delete expense");
     }
-  }
+  };
+
+  const activeCategories =
+    categories.length > 0 ? categories.filter((c) => c.is_active !== false) : DEFAULT_CATEGORIES;
+
+  const selectedCategory = activeCategories.find(
+    (c) => c.name.toLowerCase() === (newExpense.category || "").toLowerCase(),
+  );
 
   return (
     <div className="app">
       <header className="header">
         <h1>Expense Organizer</h1>
         <div className="view-selector">
-          {(['day', 'week', 'month', 'year'] as const).map((mode) => (
+          {(["day", "week", "month", "year"] as const).map((mode) => (
             <button
               key={mode}
               data-mode={mode}
-              className={viewMode === mode ? 'active' : ''}
+              className={viewMode === mode ? "active" : ""}
               onClick={() => setViewMode(mode)}
             >
               {mode.charAt(0).toUpperCase() + mode.slice(1)}
@@ -132,7 +179,9 @@ function App() {
           <span>🌍</span>
           <select value={currency} onChange={(e) => setCurrency(e.target.value as Currency)}>
             {CURRENCIES.map(({ code, label }) => (
-              <option key={code} value={code}>{label}</option>
+              <option key={code} value={code}>
+                {label}
+              </option>
             ))}
           </select>
         </div>
@@ -140,7 +189,7 @@ function App() {
 
       {error && <div className="error-banner">{error}</div>}
 
-      {viewMode === 'day' && (
+      {viewMode === "day" && (
         <div className="add-expense-form">
           <h2>Add New Expense</h2>
           <form onSubmit={addExpense}>
@@ -159,13 +208,30 @@ function App() {
               onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
               required
             />
-            <input
-              type="text"
-              placeholder="Category"
-              value={newExpense.category}
-              onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
-              required
-            />
+            <div className="category-select-container">
+              {selectedCategory && (
+                <span
+                  className="category-color-badge"
+                  style={{ backgroundColor: selectedCategory.color }}
+                  title={selectedCategory.name}
+                />
+              )}
+              <select
+                aria-label="Category"
+                value={newExpense.category}
+                onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+                required
+              >
+                <option value="" disabled>
+                  Select Category
+                </option>
+                {activeCategories.map((c) => (
+                  <option key={c.id || c.name} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <input
               type="date"
               value={newExpense.date}
@@ -178,21 +244,32 @@ function App() {
       )}
 
       <div className="excel-container">
-        {viewMode === 'day' ? (
+        {viewMode === "day" ? (
           <DayExcelView
             expenses={expenses}
             currency={currency}
+            categories={activeCategories}
             onUpdate={updateExpense}
             onDelete={removeExpense}
           />
-        ) : viewMode === 'week' ? (
-          <ExcelGridView expenses={expenses} selectedDate={selectedDate} mode={viewMode} currency={currency} />
+        ) : viewMode === "week" ? (
+          <ExcelGridView
+            expenses={expenses}
+            selectedDate={selectedDate}
+            mode={viewMode}
+            currency={currency}
+          />
         ) : (
-          <Grid6x6View expenses={expenses} selectedDate={selectedDate} mode={viewMode} currency={currency} />
+          <Grid6x6View
+            expenses={expenses}
+            selectedDate={selectedDate}
+            mode={viewMode}
+            currency={currency}
+          />
         )}
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

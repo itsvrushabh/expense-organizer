@@ -1,15 +1,12 @@
 from datetime import date
 
 import pytest
-from pydantic import ValidationError
-
 from models import Expense, ExpenseCreate, ExpenseSummary
+from pydantic import ValidationError
 
 
 def test_expense_create_parses_iso_date():
-    expense = ExpenseCreate(
-        description="Lunch", amount=12.5, category="Food", date="2026-03-15"
-    )
+    expense = ExpenseCreate(description="Lunch", amount=12.5, category="Food", date="2026-03-15")
     assert expense.date == date(2026, 3, 15)
 
 
@@ -31,7 +28,9 @@ def test_expense_create_rejects_missing_fields():
 
 
 def test_expense_inherits_create_fields():
-    expense = Expense(id=7, description="Lunch", amount=12.5, category="Food", date=date(2026, 3, 15))
+    expense = Expense(
+        id=7, description="Lunch", amount=12.5, category="Food", date=date(2026, 3, 15)
+    )
     assert expense.id == 7
     assert isinstance(expense, ExpenseCreate)
 

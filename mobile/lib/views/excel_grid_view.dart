@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../models/expense.dart';
 import '../models/queue_item.dart';
 import '../utils/colors.dart';
@@ -23,7 +24,9 @@ class ExcelGridView extends StatelessWidget {
 
   List<Map<String, dynamic>> _getRows() {
     if (mode == 'week') {
-      final start = selectedDate.subtract(Duration(days: selectedDate.weekday % 7)); // Sunday
+      final start = selectedDate.subtract(
+        Duration(days: selectedDate.weekday % 7),
+      ); // Sunday
       return List.generate(7, (i) {
         final day = start.add(Duration(days: i));
         return {
@@ -33,7 +36,10 @@ class ExcelGridView extends StatelessWidget {
         };
       });
     } else if (mode == 'month') {
-      final daysInMonth = DateUtils.getDaysInMonth(selectedDate.year, selectedDate.month);
+      final daysInMonth = DateUtils.getDaysInMonth(
+        selectedDate.year,
+        selectedDate.month,
+      );
       return List.generate(daysInMonth, (i) {
         final dayNum = i + 1;
         return {
@@ -45,12 +51,9 @@ class ExcelGridView extends StatelessWidget {
     } else {
       // Year
       return List.generate(12, (i) {
-        final monthName = DateFormat('MMM').format(DateTime(selectedDate.year, i + 1, 1));
-        return {
-          'key': i.toString(),
-          'label': monthName,
-          'monthNum': i + 1,
-        };
+        final monthName = DateFormat('MMM')
+            .format(DateTime(selectedDate.year, i + 1, 1));
+        return {'key': i.toString(), 'label': monthName, 'monthNum': i + 1};
       });
     }
   }
@@ -83,7 +86,10 @@ class ExcelGridView extends StatelessWidget {
           children: [
             Icon(Icons.grid_on, size: 56, color: Colors.grey),
             SizedBox(height: 12),
-            Text('No expenses recorded for this period.', style: TextStyle(color: Colors.grey, fontSize: 16)),
+            Text(
+              'No expenses recorded for this period.',
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
           ],
         ),
       );
@@ -97,13 +103,15 @@ class ExcelGridView extends StatelessWidget {
     for (final exp in expenses) {
       final key = _bucketKey(exp.date);
       byRowAndCategory.putIfAbsent(key, () => {});
-      byRowAndCategory[key]![exp.category] = (byRowAndCategory[key]![exp.category] ?? 0.0) + exp.amount;
+      byRowAndCategory[key]![exp.category] =
+          (byRowAndCategory[key]![exp.category] ?? 0.0) + exp.amount;
     }
 
     for (final exp in pendingExpenses) {
       final key = _bucketKey(exp.date);
       byRowAndCategory.putIfAbsent(key, () => {});
-      byRowAndCategory[key]![exp.category] = (byRowAndCategory[key]![exp.category] ?? 0.0) + exp.amount;
+      byRowAndCategory[key]![exp.category] =
+          (byRowAndCategory[key]![exp.category] ?? 0.0) + exp.amount;
     }
 
     final Map<String, double> rowTotals = {};
@@ -137,7 +145,11 @@ class ExcelGridView extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: Colors.grey.shade300),
           boxShadow: [
-            BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: ClipRRect(
@@ -148,12 +160,28 @@ class ExcelGridView extends StatelessWidget {
             dataRowMaxHeight: 52,
             columnSpacing: 18,
             columns: [
-              const DataColumn(label: Text('Category', style: TextStyle(fontWeight: FontWeight.bold))),
-              ...rows.map((r) => DataColumn(
-                    label: Text(r['label'] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    numeric: true,
-                  )),
-              const DataColumn(label: Text('Total', style: TextStyle(fontWeight: FontWeight.bold)), numeric: true),
+              const DataColumn(
+                label: Text(
+                  'Category',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              ...rows.map(
+                (r) => DataColumn(
+                  label: Text(
+                    r['label'] as String,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  numeric: true,
+                ),
+              ),
+              const DataColumn(
+                label: Text(
+                  'Total',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                numeric: true,
+              ),
             ],
             rows: [
               // Category rows
@@ -163,9 +191,22 @@ class ExcelGridView extends StatelessWidget {
                   cells: [
                     DataCell(
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: color.bg, borderRadius: BorderRadius.circular(6)),
-                        child: Text(cat, style: TextStyle(color: color.fg, fontWeight: FontWeight.bold, fontSize: 12)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.bg,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          cat,
+                          style: TextStyle(
+                            color: color.fg,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ),
                     ...rows.map((r) {
@@ -174,8 +215,12 @@ class ExcelGridView extends StatelessWidget {
                         Text(
                           val != null && val > 0 ? currency.format(val) : '-',
                           style: TextStyle(
-                            color: val != null && val > 0 ? Colors.black87 : Colors.grey.shade400,
-                            fontWeight: val != null && val > 0 ? FontWeight.w600 : FontWeight.normal,
+                            color: val != null && val > 0
+                                ? Colors.black87
+                                : Colors.grey.shade400,
+                            fontWeight: val != null && val > 0
+                                ? FontWeight.w600
+                                : FontWeight.normal,
                           ),
                         ),
                       );
@@ -183,7 +228,10 @@ class ExcelGridView extends StatelessWidget {
                     DataCell(
                       Text(
                         currency.format(categoryTotals[cat]),
-                        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blueAccent,
+                        ),
                       ),
                     ),
                   ],
@@ -194,7 +242,15 @@ class ExcelGridView extends StatelessWidget {
               DataRow(
                 color: WidgetStateProperty.all(const Color(0xFFF8FAFC)),
                 cells: [
-                  const DataCell(Text('Total', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13))),
+                  const DataCell(
+                    Text(
+                      'Total',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
                   ...rows.map((r) {
                     final t = rowTotals[r['key']] ?? 0.0;
                     return DataCell(
@@ -207,7 +263,10 @@ class ExcelGridView extends StatelessWidget {
                   DataCell(
                     Text(
                       currency.format(grandTotal),
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
                     ),
                   ),
                 ],

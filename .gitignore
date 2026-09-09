@@ -4,6 +4,7 @@ __pycache__/
 
 # Local data
 data/
+postgres_data/
 
 # Node / frontend
 node_modules/
@@ -15,8 +16,9 @@ dist/
 # Coverage artifacts
 .coverage
 htmlcov/
+coverage/
+*.lcov
 # AI Model binaries
 *.gguf
 expense-helper/mobile/ios/*
 expense-helper/mobile/android/*
-frontend/bun.lock

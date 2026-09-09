@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/chat_models.dart';
 import '../services/ai_chat_service.dart';
 import '../widgets/chat_bubble.dart';
@@ -29,7 +30,8 @@ class _ChatScreenState extends State<ChatScreen> {
     _messages.add(
       ChatMessage(
         id: 'msg_welcome',
-        text: '👋 Hi! I am your AI Expense Helper. Tell me about any expense, for example:\n'
+        text:
+            '👋 Hi! I am your AI Expense Helper. Tell me about any expense, for example:\n'
             '• "Spent \$45 on groceries today"\n'
             '• "Paid \$14 for lunch with team yesterday"\n'
             '• "Uber ride \$22"\n\n'
@@ -118,7 +120,8 @@ class _ChatScreenState extends State<ChatScreen> {
           _messages.add(
             ChatMessage(
               id: 'err_${DateTime.now().millisecondsSinceEpoch}',
-              text: '⚠️ Could not connect to AI model service: $e\n'
+              text:
+                  '⚠️ Could not connect to AI model service: $e\n'
                   'Please check that aimodel is running on ${AIChatService().baseUrl}',
               isUser: false,
               timestamp: DateTime.now(),
@@ -242,7 +245,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
                 ActionChip(
                   label: const Text('Localhost (127.0.0.1)'),
-                  onPressed: () => urlController.text = 'http://127.0.0.1:18001',
+                  onPressed: () =>
+                      urlController.text = 'http://127.0.0.1:18001',
                 ),
               ],
             ),
@@ -280,7 +284,11 @@ class _ChatScreenState extends State<ChatScreen> {
                 color: theme.colorScheme.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.smart_toy, size: 20, color: theme.colorScheme.primary),
+              child: Icon(
+                Icons.smart_toy,
+                size: 20,
+                color: theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(width: 10),
             Column(
@@ -296,7 +304,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       width: 8,
                       height: 8,
                       decoration: BoxDecoration(
-                        color: _isBackendReachable ? Colors.green : Colors.orange,
+                        color: _isBackendReachable
+                            ? Colors.green
+                            : Colors.orange,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -305,7 +315,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       _isBackendReachable ? 'AI Connected' : 'AI Offline',
                       style: TextStyle(
                         fontSize: 11,
-                        color: _isBackendReachable ? Colors.green : Colors.orange,
+                        color: _isBackendReachable
+                            ? Colors.green
+                            : Colors.orange,
                       ),
                     ),
                   ],
@@ -347,7 +359,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     message: message,
                     onConfirm: _handleConfirmDraft,
                     onCancel: _handleCancelDraft,
-                    onSuggestionTap: (suggestion) => _handleSubmitted(suggestion),
+                    onSuggestionTap: (suggestion) =>
+                        _handleSubmitted(suggestion),
                   );
                 },
               ),
@@ -356,14 +369,19 @@ class _ChatScreenState extends State<ChatScreen> {
             // Starter Quick Chips (when only welcome message is visible)
             if (_messages.length <= 1)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
                     children: [
                       _buildQuickPromptChip('Spent \$45 on groceries today'),
                       const SizedBox(width: 8),
-                      _buildQuickPromptChip('Paid \$12.50 for coffee at Starbucks'),
+                      _buildQuickPromptChip(
+                        'Paid \$12.50 for coffee at Starbucks',
+                      ),
                       const SizedBox(width: 8),
                       _buildQuickPromptChip('Uber ride \$28 yesterday'),
                       const SizedBox(width: 8),
@@ -404,7 +422,8 @@ class _ChatScreenState extends State<ChatScreen> {
                           vertical: 10,
                         ),
                         filled: true,
-                        fillColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                        fillColor: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
                       ),
                       onSubmitted: _handleSubmitted,
                     ),

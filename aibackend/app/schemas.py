@@ -1,4 +1,5 @@
-from typing import Optional, Dict, Any, List
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -11,7 +12,9 @@ class ExpenseDraft(BaseModel):
 
 class ToolCall(BaseModel):
     tool: str = Field(..., description="Name of the selected tool")
-    arguments: Dict[str, Any] = Field(default_factory=dict, description="Arguments dictionary for the tool")
+    arguments: dict[str, Any] = Field(
+        default_factory=dict, description="Arguments dictionary for the tool"
+    )
 
 
 class ToolResult(BaseModel):
@@ -20,16 +23,14 @@ class ToolResult(BaseModel):
         description="idle, awaiting_confirmation, saved, or cancelled",
     )
     message: str = Field(..., description="Assistant reply message to the user")
-    draft: Optional[ExpenseDraft] = None
+    draft: ExpenseDraft | None = None
     action_required: str = Field(default="none", description="confirm, clarify, or none")
-    saved_expense_id: Optional[int] = None
+    saved_expense_id: int | None = None
 
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, description="User message")
-    session_id: Optional[str] = Field(
-        default=None, description="Client session identifier"
-    )
+    session_id: str | None = Field(default=None, description="Client session identifier")
 
 
 class ChatResponse(BaseModel):
@@ -39,12 +40,12 @@ class ChatResponse(BaseModel):
         ...,
         description="idle, awaiting_confirmation, saved, or cancelled",
     )
-    draft: Optional[ExpenseDraft] = None
-    action_required: Optional[str] = Field(
+    draft: ExpenseDraft | None = None
+    action_required: str | None = Field(
         default="none",
         description="confirm, clarify, or none",
     )
-    saved_expense_id: Optional[int] = None
+    saved_expense_id: int | None = None
 
 
 class ActionRequest(BaseModel):

@@ -1,0 +1,54 @@
+name: CI / Python
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-python-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: ${{ matrix.service }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: backend
+            python: "3.13"
+            requirements: requirements.txt
+            cache: backend/requirements.txt
+          - service: aibackend
+            python: "3.13"
+            requirements: "requirements.txt"
+            cache: aibackend/requirements.txt
+          - service: aimodel
+            python: "3.13"
+            requirements: "requirements.txt"
+            cache: aimodel/requirements.txt
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: ${{ matrix.cache }}
+      - name: Install dependencies
+        working-directory: ${{ matrix.service }}
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r ${{ matrix.requirements }}
+          python -m pip install ruff==0.9.10
+      - name: Check formatting
+        run: python -m ruff format --check backend aibackend aimodel scripts
+      - name: Check lint
+        run: python -m ruff check backend aibackend aimodel scripts
+      - name: Run tests
+        working-directory: ${{ matrix.service }}
+        run: python -m pytest tests -v

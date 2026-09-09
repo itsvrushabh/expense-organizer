@@ -1,8 +1,8 @@
+use chrono::Utc;
+use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
-use chrono::Utc;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -36,7 +36,8 @@ impl QueueManager {
             return Ok(Vec::new());
         }
 
-        let file = File::open(&self.file_path).map_err(|e| format!("Failed to open queue file: {e}"))?;
+        let file =
+            File::open(&self.file_path).map_err(|e| format!("Failed to open queue file: {e}"))?;
         let reader = BufReader::new(file);
         let items: Vec<QueueItem> = serde_json::from_reader(reader).unwrap_or_else(|_| Vec::new());
         Ok(items)
@@ -45,13 +46,16 @@ impl QueueManager {
     pub fn save(&self, items: &[QueueItem]) -> Result<(), String> {
         if let Some(parent) = self.file_path.parent() {
             if !parent.exists() {
-                fs::create_dir_all(parent).map_err(|e| format!("Failed to create queue dir: {e}"))?;
+                fs::create_dir_all(parent)
+                    .map_err(|e| format!("Failed to create queue dir: {e}"))?;
             }
         }
 
-        let file = File::create(&self.file_path).map_err(|e| format!("Failed to create queue file: {e}"))?;
+        let file = File::create(&self.file_path)
+            .map_err(|e| format!("Failed to create queue file: {e}"))?;
         let writer = BufWriter::new(file);
-        serde_json::to_writer_pretty(writer, items).map_err(|e| format!("Failed to serialize queue: {e}"))?;
+        serde_json::to_writer_pretty(writer, items)
+            .map_err(|e| format!("Failed to serialize queue: {e}"))?;
         Ok(())
     }
 

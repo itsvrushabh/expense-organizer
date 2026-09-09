@@ -9,6 +9,7 @@ A modern, full-stack expense tracking platform designed for desktop, web, and mo
 All in-depth component and setup documentation is organized in the [`docs/`](docs/) directory:
 
 - 🚀 **[Setup & Deployment Guide](docs/setup.md)**: Docker Compose, local manual startup, environment variables, and troubleshooting.
+- 📦 **[GitHub CI and Release Status](docs/release.md)**: Main-branch, current-branch, workflow, version, and release status.
 - ⚙️ **[Backend Guide](docs/backend.md)**: FastAPI architecture, async routers, Pydantic v2 schemas, in-memory store, and 34 pytest tests.
 - 💻 **[Web Frontend Guide](docs/frontend.md)**: Bun + React 19 + TypeScript, Excel pivot table views, spend heatmaps, and `/api` proxy.
 - 📱 **[Mobile App & Rust Engine Guide](docs/mobile.md)**: Flutter client, Material 3 gradient UI, C-FFI Rust sync engine, offline queue, and build guides.
@@ -67,7 +68,10 @@ docker-compose up -d --build
 - 🩺 **AI Health Status**: [http://localhost:18001/health](http://localhost:18001/health)
 
 > [!NOTE]
-> **Zero Unnecessary Port Exposure**: Both `backend` (internal port `8000`) and `aimodel` (internal port `8002`) run strictly on the internal Docker network with **no host port bindings**. All client API requests route through the Bun reverse proxy at `http://localhost:13000/api` or communicate with the AI assistant on port `18001`.
+> **Zero Unnecessary Port Exposure**:
+> - `backend` (internal port `8000`), `aimodel` (internal port `8002`), and `db` (PostgreSQL internal port `5432`) run strictly inside the Docker bridge network with **no host port bindings**.
+> - PostgreSQL database files are persisted on the host machine at `./postgres_data` outside the container and are consumed exclusively by `backend`.
+> - All client API requests route through the Bun reverse proxy at `http://localhost:13000/api` or communicate with the AI assistant on port `18001`.
 
 ---
 
@@ -101,33 +105,46 @@ flutter run
 
 Run automated verification across all layers:
 
+### 1. Run All Test Suites in One Command
 ```bash
-# 1. Backend pytest suite (34 tests)
-pytest backend/tests
+./scripts/run_all_tests.sh
+```
 
-# 2. AI Backend orchestrator pytest suite (8 tests)
-pytest aibackend/tests
+### 2. Run Live Container Smoke Tests
+```bash
+python3 scripts/smoke_test.py
+```
 
-# 3. AI Model server pytest suite (4 tests)
-pytest aimodel/tests
+### 3. Run Individual Suites with Coverage
+```bash
+# Core Backend (Pytest + Coverage):
+pytest backend/tests -v --cov=backend --cov-report=term
 
-# 4. Rust native sync engine tests (3 tests)
+# AI Backend (Pytest + Coverage):
+pytest aibackend/tests -v --cov=aibackend/app --cov-report=term
+
+# AI Model Server (Pytest + Coverage):
+pytest aimodel/tests -v --cov=aimodel/app --cov-report=term
+
+# Web Frontend (Bun Test + Coverage):
+cd frontend && bun test --coverage
+
+# Mobile Flutter (Flutter Test):
+cd mobile && flutter test
+
+# Rust Native Sync Engine:
 cd mobile/rust && cargo test
 
-# 5. Flutter mobile tests & analysis (7 tests)
-cd mobile
-flutter analyze
-flutter test
-
-# 6. Expense Helper chat app tests & analysis (3 tests)
-cd expense-helper/mobile
-flutter analyze
-flutter test
-
-# 7. Web frontend TypeScript type check
-cd frontend
-bun x tsc --noEmit
+# Web Frontend Type Check & Linter:
+cd frontend && bun x tsc --noEmit && bunx --bun @biomejs/biome@1.9.4 check .
 ```
+
+## GitHub Workflow and Release Status
+
+The complete status dashboard is maintained separately in [docs/release.md](docs/release.md).
+It contains the `main` branch status, current branch status, all CI sub-workflows, release
+status, version tags, artifact details, status meanings, and commands for inspecting another
+branch or commit.
 
 ---
 
@@ -175,15 +192,25 @@ expense-organizer/
 │   ├── mobile.md                 # Flutter mobile & Rust engine docs
 │   ├── expense-helper-mobile.md  # Flutter chat assistant docs
 │   ├── expense-helper-desktop.md # Desktop roadmap (on hold)
+│   ├── release.md                # Branch, workflow, version, and release status
 │   └── setup.md                  # Deployment & setup walkthrough
 ├── .github/
+│   ├── workflows/ci-python.yml     # Python tests, format, and lint
+│   ├── workflows/ci-frontend.yml   # Bun, Biome, and TypeScript checks
+│   ├── workflows/ci-flutter.yml    # Flutter application checks
+│   ├── workflows/ci-rust.yml       # Rust format, lint, and tests
+│   ├── workflows/ci-services.yml   # Docker and health checks
+│   ├── workflows/ci-success.yml    # Aggregate branch-protection status
+│   ├── workflows/release.yml       # Tagged mobile and container releases
+│   └── dependabot.yml              # Weekly dependency updates
 │   └── workflows/build-mobile.yml # CI/CD for Android & iOS builds
+├── postgres_data/                # PostgreSQL host data directory (persisted outside container, gitignored)
 ├── backend/                      # Pure REST core backend (internal port 8000)
 │   ├── main.py                   # Pure REST app factory, CORS, endpoint catalog
 │   ├── models.py                 # Pydantic schemas (Expense, ExpenseSummary)
-│   ├── storage.py                # In-memory data store
+│   ├── storage.py                # PostgreSQL storage engine (with in-memory fallback)
 │   ├── routers/expenses.py       # REST route handlers & aggregations
-│   ├── tests/                    # 34 pytest unit & integration tests
+│   ├── tests/                    # 35 pytest unit & integration tests
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── aibackend/                    # AI Orchestration container (port 18001)
@@ -199,6 +226,7 @@ expense-organizer/
 │   └── requirements.txt
 ├── frontend/
 │   ├── index.ts                  # Bun HTTP server & /api reverse proxy
+│   ├── bun.lock                   # Committed frontend dependency lockfile
 │   ├── src/                      # React 19 TypeScript application
 │   ├── package.json
 │   └── Dockerfile
@@ -210,6 +238,8 @@ expense-organizer/
 ├── expense-helper/               # Dedicated conversational AI companion
 │   └── mobile/                   # Flutter chat client (Android & iOS)
 ├── scripts/
+│   ├── run_all_tests.sh          # Master test runner across all 5 subprojects
+│   ├── smoke_test.py             # Live container integration smoke test suite
 │   └── add_recurring_expenses.py # Seeding script for recurring expenses
 ├── docker-compose.yml
 ├── start.sh
