@@ -105,32 +105,38 @@ flutter run
 
 Run automated verification across all layers:
 
+### 1. Run All Test Suites in One Command
 ```bash
-# 1. Backend pytest suite (34 tests)
-pytest backend/tests
+./scripts/run_all_tests.sh
+```
 
-# 2. AI Backend orchestrator pytest suite (8 tests)
-pytest aibackend/tests
+### 2. Run Live Container Smoke Tests
+```bash
+python3 scripts/smoke_test.py
+```
 
-# 3. AI Model server pytest suite (4 tests)
-pytest aimodel/tests
+### 3. Run Individual Suites with Coverage
+```bash
+# Core Backend (Pytest + Coverage):
+pytest backend/tests -v --cov=backend --cov-report=term
 
-# 4. Rust native sync engine tests (3 tests)
+# AI Backend (Pytest + Coverage):
+pytest aibackend/tests -v --cov=aibackend/app --cov-report=term
+
+# AI Model Server (Pytest + Coverage):
+pytest aimodel/tests -v --cov=aimodel/app --cov-report=term
+
+# Web Frontend (Bun Test + Coverage):
+cd frontend && bun test --coverage
+
+# Mobile Flutter (Flutter Test):
+cd mobile && flutter test
+
+# Rust Native Sync Engine:
 cd mobile/rust && cargo test
 
-# 5. Flutter mobile tests & analysis (7 tests)
-cd mobile
-flutter analyze
-flutter test
-
-# 6. Expense Helper chat app tests & analysis (3 tests)
-cd expense-helper/mobile
-flutter analyze
-flutter test
-
-# 7. Web frontend TypeScript type check
-cd frontend
-bun x tsc --noEmit
+# Web Frontend Type Check & Linter:
+cd frontend && bun x tsc --noEmit && bunx --bun @biomejs/biome@1.9.4 check .
 ```
 
 ## GitHub Workflow and Release Status
@@ -232,6 +238,8 @@ expense-organizer/
 ├── expense-helper/               # Dedicated conversational AI companion
 │   └── mobile/                   # Flutter chat client (Android & iOS)
 ├── scripts/
+│   ├── run_all_tests.sh          # Master test runner across all 5 subprojects
+│   ├── smoke_test.py             # Live container integration smoke test suite
 │   └── add_recurring_expenses.py # Seeding script for recurring expenses
 ├── docker-compose.yml
 ├── start.sh
