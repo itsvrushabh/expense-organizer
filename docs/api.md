@@ -66,9 +66,12 @@ All amounts are stored as non-negative floats in base USD and rounded to 2 decim
 
 ## Curl Examples
 
+> [!TIP]
+> In Docker, the API is proxied through the frontend reverse proxy at `http://localhost:13000/api`. If you are running the backend standalone locally without Docker, use `http://localhost:8000`.
+
 ### Create an Expense
 ```bash
-curl -X POST "http://localhost:8000/expenses" \
+curl -X POST "http://localhost:13000/api/expenses" \
   -H "Content-Type: application/json" \
   -d '{
     "description": "Internet Bill",
@@ -80,15 +83,15 @@ curl -X POST "http://localhost:8000/expenses" \
 
 ### Query Week by Date (Sunday–Saturday view)
 ```bash
-curl "http://localhost:8000/expenses/week/date/2026-09-07?start_sunday=true"
+curl "http://localhost:13000/api/expenses/week/date/2026-09-07?start_sunday=true"
 ```
 
 ### Query Month
 ```bash
-curl "http://localhost:8000/expenses/month/2026/9"
+curl "http://localhost:13000/api/expenses/month/2026/9"
 ```
 
 ### Delete an Expense
 ```bash
-curl -X DELETE "http://localhost:8000/expenses/1"
+curl -X DELETE "http://localhost:13000/api/expenses/1"
 ```

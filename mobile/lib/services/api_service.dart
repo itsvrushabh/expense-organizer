@@ -17,9 +17,9 @@ class ApiService {
   static String get _defaultBaseUrl {
     if (!kIsWeb && Platform.isAndroid) {
       // 10.0.2.2 is the host loopback IP in the standard Android emulator
-      return 'http://10.0.2.2:8000';
+      return 'http://10.0.2.2:13000/api';
     }
-    return 'http://localhost:8000';
+    return 'http://localhost:13000/api';
   }
 
   static String sanitizeUrl(String url) {

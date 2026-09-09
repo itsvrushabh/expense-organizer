@@ -1,24 +1,19 @@
 # Setup & Deployment Guide 🚀
 
-This guide covers running the Expense Organizer using Docker or as standalone local services.
+This guide covers running the Expense Organizer using Docker or as standalone local services with prefixed host port mapping (`13000`, `18001`) and standard internal ports (`8000`, `8001`, `8002`, `3000`).
 
 ---
 
 ## Option 1: Docker (Recommended)
 
-The easiest way to start the entire system (FastAPI backend + Bun React frontend) with a single command:
+The easiest way to start the entire system with Docker Compose:
 
 ```bash
 # Using the start script
 ./start.sh
 
 # Or directly with Docker Compose
-docker-compose up --build
-```
-
-To run in background (detached):
-```bash
-docker-compose up -d --build
+docker-compose up --build -d
 ```
 
 To stop:
@@ -27,11 +22,16 @@ docker-compose down
 ```
 
 ### Access Points
-- 🌐 **Web Frontend**: `http://localhost:3000`
-- 🔧 **Backend API**: `http://localhost:8000`
-- 📚 **Interactive Swagger API Docs**: `http://localhost:8000/docs`
-- 🤖 **AI Backend Service**: `http://localhost:8001`
-- 🩺 **AI Health Status**: `http://localhost:8001/health`
+- 🌐 **Web Frontend**: `http://localhost:13000` (mapped to internal container port `3000`)
+- 🔧 **API Proxy (via Frontend)**: `http://localhost:13000/api` (proxied to internal backend `8000`)
+- 📚 **Interactive Swagger API Docs**: `http://localhost:13000/api/docs`
+- 🧠 **AI Backend Orchestrator (`aibackend`)**: `http://localhost:18001` (mapped to internal container port `8001`)
+- 🩺 **AI Health Status**: `http://localhost:18001/health`
+
+> [!NOTE]
+> **Zero Unnecessary Port Exposure**:
+> - Both `backend` (internal port `8000`) and `aimodel` (internal port `8002`) operate strictly on the internal Docker bridge network (`expense-network`) with **zero host port bindings**.
+> - Clients and mobile apps communicate through the frontend reverse proxy (`http://localhost:13000/api`) or interact with the AI assistant at `http://localhost:18001`.
 
 ---
 
@@ -47,36 +47,45 @@ pip install -r requirements.txt -r requirements-dev.txt
 uvicorn main:app --reload --port 8000
 ```
 
-### 2. AI Backend (FastAPI + GGUF Engine)
+### 2. AI Model Service (FastAPI + GPU GGUF Engine)
+```bash
+cd aimodel
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# Ensure model exists in aimodel/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+uvicorn app.main:app --reload --port 8002
+```
+
+### 3. AI Backend Orchestrator (FastAPI + Tool Dispatcher)
 ```bash
 cd aibackend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Ensure model exists in aibackend/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
-uvicorn app.main:app --reload --port 8001
+uvicorn app.main:app --reload --port 18001
 ```
 
-### 3. Web Frontend (Bun + React)
+### 4. Web Frontend (Bun + React)
 ```bash
 cd frontend
 bun install
-bun run dev
+PORT=13000 bun run dev
 ```
 
-### 4. Expense Organizer Mobile App (Flutter + Rust)
+### 5. Expense Organizer Mobile App (Flutter + Rust)
 ```bash
 cd mobile
 flutter run
 ```
 
-### 5. Expense Helper Chat App (Flutter Mobile)
+### 6. Expense Helper Chat App (Flutter Mobile)
 ```bash
 cd expense-helper/mobile
 flutter run
 ```
-
 
 ---
 
@@ -86,28 +95,24 @@ flutter run
 - `PORT` - Port to bind the Uvicorn server (default: `8000`)
 
 ### Frontend
-- `PORT` - Port to bind the Bun server (default: `3000`)
-- `API_URL` - Backend URL used by the Bun `/api` reverse proxy (default: `http://localhost:8000`)
+- `PORT` - Internal port to bind the Bun server (default: `3000`, published as `13000:3000`)
+- `API_URL` - Backend URL used by the Bun `/api` reverse proxy (default: `http://backend:8000` or `http://localhost:8000`)
+
+### AI Backend
+- `PORT` - Internal port to bind Uvicorn (default: `8001`, published as `18001:8001`)
+- `AIMODEL_URL` - AI Model service URL (default: `http://aimodel:8002` or `http://localhost:8002`)
+- `EXPENSE_API_URL` - Backend API URL (default: `http://backend:8000` or `http://localhost:8000`)
 
 ---
 
-## Troubleshooting
-
-### Port Conflicts
-If port `3000` or `8000` is already in use, update `docker-compose.yml`:
-```yaml
-ports:
-  - "3001:3000"  # Change host port
-```
-
-### Docker Logs
+## Docker Logs
 ```bash
 # View combined logs
 docker-compose logs -f
 
-# View backend only
+# View specific service logs
 docker-compose logs -f backend
-
-# View frontend only
 docker-compose logs -f frontend
+docker-compose logs -f aibackend
+docker-compose logs -f aimodel
 ```

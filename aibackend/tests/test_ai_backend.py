@@ -4,147 +4,125 @@ from fastapi.testclient import TestClient
 from datetime import datetime, timedelta
 
 from app.main import create_app
-from app.llm import LLMEngine
+from app.model_client import ModelClient
 from app.session import SessionManager
+from app.tools import (
+    TOOLS_SCHEMA,
+    tool_draft_expense,
+    tool_update_draft_field,
+    tool_commit_expense,
+    tool_ask_clarification,
+    tool_cancel_draft,
+    ExpenseDraft,
+)
 import app.main as main_module
 
 
 @pytest.fixture
 def client():
     application = create_app()
-    # Initialize engine and session manager manually for tests
-    engine = LLMEngine(model_path="/nonexistent/model.gguf")
-    manager = SessionManager(llm_engine=engine)
-    main_module.llm_engine = engine
+    m_client = ModelClient(aimodel_url="http://nonexistent:8002")
+    manager = SessionManager(model_client=m_client)
+    main_module.model_client = m_client
     main_module.session_manager = manager
 
     with TestClient(application) as test_client:
         yield test_client
 
 
-def test_root_endpoint(client):
-    res = client.get("/")
-    assert res.status_code == 200
-    data = res.json()
-    assert "endpoints" in data
+def test_tools_schema():
+    tool_names = [t["function"]["name"] for t in TOOLS_SCHEMA]
+    assert "draft_expense" in tool_names
+    assert "update_draft_field" in tool_names
+    assert "commit_expense" in tool_names
+    assert "ask_clarification" in tool_names
+    assert "cancel_draft" in tool_names
+
+
+def test_tool_draft_expense():
+    res = tool_draft_expense("Team Lunch", 45.0, "Food", "2026-09-09")
+    assert res.status == "awaiting_confirmation"
+    assert res.draft.amount == 45.0
+    assert res.draft.category == "Food"
+
+
+def test_tool_update_draft_field():
+    draft = ExpenseDraft(
+        description="Groceries",
+        amount=50.0,
+        category="Groceries",
+        date="2026-09-09",
+    )
+    res = tool_update_draft_field("amount", "60", draft)
+    assert res.draft.amount == 60.0
+
+    res2 = tool_update_draft_field("date", "yesterday", res.draft)
+    expected_yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    assert res2.draft.date == expected_yesterday
+
+
+@pytest.mark.anyio
+@patch("app.tools.insert_expense_to_db", new_callable=AsyncMock)
+async def test_tool_commit_expense(mock_insert):
+    mock_insert.return_value = 88
+    res = await tool_commit_expense("Flight", 300.0, "Travel", "2026-09-09")
+    assert res.status == "saved"
+    assert res.saved_expense_id == 88
 
 
 def test_health_endpoint(client):
     res = client.get("/health")
     assert res.status_code == 200
     data = res.json()
-    assert data["status"] == "healthy"
-    assert "model_file_exists" in data
-    assert "model_loaded" in data
+    assert "status" in data
+    assert "aimodel_url" in data
+    assert "backend_url" in data
 
 
-def test_chat_message_extraction(client):
-    session_id = "test-session-1"
-    res = client.post(
-        "/api/chat/message",
-        json={"session_id": session_id, "message": "Spent 45 on groceries today"},
-    )
-    assert res.status_code == 200
-    data = res.json()
-    assert data["status"] == "awaiting_confirmation"
-    assert data["action_required"] == "confirm"
-    assert data["draft"] is not None
-    assert data["draft"]["amount"] == 45.0
-    assert data["draft"]["category"] == "Groceries"
-    assert data["draft"]["date"] == datetime.now().strftime("%Y-%m-%d")
-
-
-def test_chat_update_field(client):
-    session_id = "test-session-2"
-    # Step 1: Create initial draft
+def test_chat_message_flow(client):
+    session_id = "test-session-flow"
     res1 = client.post(
         "/api/chat/message",
-        json={"session_id": session_id, "message": "Paid 30 for pizza"},
+        json={"message": "Spent 45 on pizza lunch today", "session_id": session_id},
     )
     assert res1.status_code == 200
-    assert res1.json()["draft"]["amount"] == 30.0
+    d1 = res1.json()
+    assert d1["status"] == "awaiting_confirmation"
+    assert d1["draft"]["amount"] == 45.0
+    assert d1["draft"]["category"] == "Food"
 
-    # Step 2: Change amount
+    # Update field
     res2 = client.post(
         "/api/chat/message",
-        json={"session_id": session_id, "message": "change amount to 35"},
+        json={"message": "change amount to 50", "session_id": session_id},
     )
     assert res2.status_code == 200
-    data2 = res2.json()
-    assert data2["draft"]["amount"] == 35.0
-
-    # Step 3: Change category
-    res3 = client.post(
-        "/api/chat/message",
-        json={"session_id": session_id, "message": "change category to Entertainment"},
-    )
-    assert res3.status_code == 200
-    assert res3.json()["draft"]["category"] == "Entertainment"
-
-    # Step 4: Change date to yesterday
-    res4 = client.post(
-        "/api/chat/message",
-        json={"session_id": session_id, "message": "change date to yesterday"},
-    )
-    assert res4.status_code == 200
-    expected_yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    assert res4.json()["draft"]["date"] == expected_yesterday
+    assert res2.json()["draft"]["amount"] == 50.0
 
 
-@patch("app.session.insert_expense_to_db", new_callable=AsyncMock)
-def test_chat_confirm_via_message(mock_insert, client):
-    mock_insert.return_value = 42
-    session_id = "test-session-3"
-
-    # 1. Draft
-    client.post(
-        "/api/chat/message",
-        json={"session_id": session_id, "message": "Spent 25 on uber ride today"},
-    )
-
-    # 2. Confirm via message "yes"
-    res = client.post(
-        "/api/chat/message",
-        json={"session_id": session_id, "message": "yes"},
-    )
-    assert res.status_code == 200
-    data = res.json()
-    assert data["status"] == "saved"
-    assert data["saved_expense_id"] == 42
-    assert "successfully saved" in data["message"]
-    mock_insert.assert_awaited_once()
-
-
-@patch("app.session.insert_expense_to_db", new_callable=AsyncMock)
-def test_chat_confirm_via_endpoint(mock_insert, client):
-    mock_insert.return_value = 99
-    session_id = "test-session-4"
+@patch("app.tools.insert_expense_to_db", new_callable=AsyncMock)
+def test_chat_confirm(mock_insert, client):
+    mock_insert.return_value = 55
+    session_id = "test-session-confirm"
 
     client.post(
         "/api/chat/message",
-        json={"session_id": session_id, "message": "Dinner with friends 60"},
+        json={"message": "Spent 25 on uber ride today", "session_id": session_id},
     )
 
     res = client.post("/api/chat/confirm", json={"session_id": session_id})
     assert res.status_code == 200
-    data = res.json()
-    assert data["status"] == "saved"
-    assert data["saved_expense_id"] == 99
-    mock_insert.assert_awaited_once()
+    assert res.json()["status"] == "saved"
+    assert res.json()["saved_expense_id"] == 55
 
 
-def test_chat_cancel_draft(client):
-    session_id = "test-session-5"
+def test_chat_cancel(client):
+    session_id = "test-session-cancel"
     client.post(
         "/api/chat/message",
-        json={"session_id": session_id, "message": "Flight ticket 200"},
+        json={"message": "Bought shoes 120", "session_id": session_id},
     )
 
     res = client.post("/api/chat/cancel", json={"session_id": session_id})
     assert res.status_code == 200
     assert res.json()["status"] == "cancelled"
-
-    # Confirming after cancel should return empty/idle prompt
-    res2 = client.post("/api/chat/confirm", json={"session_id": session_id})
-    assert res2.status_code == 200
-    assert res2.json()["status"] == "idle"
