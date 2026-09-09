@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../models/chat_models.dart';
 import 'expense_draft_card.dart';
 
@@ -34,7 +35,10 @@ class ChatBubble extends StatelessWidget {
                 constraints: BoxConstraints(
                   maxWidth: MediaQuery.of(context).size.width * 0.78,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -63,10 +67,7 @@ class ChatBubble extends StatelessWidget {
                   children: [
                     Text(
                       message.text,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 15),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -84,7 +85,11 @@ class ChatBubble extends StatelessWidget {
             CircleAvatar(
               radius: 14,
               backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.2),
-              child: Icon(Icons.person, size: 16, color: theme.colorScheme.primary),
+              child: Icon(
+                Icons.person,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
             ),
           ],
         ),
@@ -148,7 +153,10 @@ class ChatBubble extends StatelessWidget {
                         const SizedBox(width: 10),
                         const Text(
                           'Analyzing expense...',
-                          style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ],
                     )
@@ -162,7 +170,8 @@ class ChatBubble extends StatelessWidget {
                         if (message.draft != null)
                           ExpenseDraftCard(
                             draft: message.draft!,
-                            isAwaitingConfirmation: message.actionRequired == 'confirm',
+                            isAwaitingConfirmation:
+                                message.actionRequired == 'confirm',
                             isSaved: message.savedExpenseId != null,
                             savedExpenseId: message.savedExpenseId,
                             onConfirm: onConfirm,

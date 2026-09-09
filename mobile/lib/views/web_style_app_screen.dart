@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import '../models/expense.dart';
 import '../models/queue_item.dart';
 import '../services/sync_service.dart';
@@ -32,7 +33,9 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
   final _descController = TextEditingController();
   final _amountController = TextEditingController();
   final _catController = TextEditingController();
-  final _dateController = TextEditingController(text: DateFormat('yyyy-MM-dd').format(DateTime.now()));
+  final _dateController = TextEditingController(
+    text: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+  );
   bool _isAdding = false;
 
   // Toggle between heatmap grid and spreadsheet table for month/year
@@ -75,10 +78,16 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
         list = summary.expenses;
       } else if (_viewMode == 'week') {
         final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
-        final summary = await api.fetchWeekByDateExpenses(dateStr, startSunday: true);
+        final summary = await api.fetchWeekByDateExpenses(
+          dateStr,
+          startSunday: true,
+        );
         list = summary.expenses;
       } else if (_viewMode == 'month') {
-        final summary = await api.fetchMonthExpenses(_selectedDate.year, _selectedDate.month);
+        final summary = await api.fetchMonthExpenses(
+          _selectedDate.year,
+          _selectedDate.month,
+        );
         list = summary.expenses;
       } else {
         // year
@@ -95,7 +104,9 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = widget.syncService.isOnline ? 'Could not load expenses: $e' : null;
+          _errorMessage = widget.syncService.isOnline
+              ? 'Could not load expenses: $e'
+              : null;
           _isLoading = false;
         });
       }
@@ -109,7 +120,11 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
       } else if (_viewMode == 'week') {
         _selectedDate = _selectedDate.add(Duration(days: 7 * delta));
       } else if (_viewMode == 'month') {
-        _selectedDate = DateTime(_selectedDate.year, _selectedDate.month + delta, 1);
+        _selectedDate = DateTime(
+          _selectedDate.year,
+          _selectedDate.month + delta,
+          1,
+        );
       } else {
         _selectedDate = DateTime(_selectedDate.year + delta, 1, 1);
       }
@@ -124,7 +139,11 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
     final rawAmount = double.tryParse(_amountController.text.trim());
     final date = _dateController.text.trim();
 
-    if (desc.isEmpty || cat.isEmpty || date.isEmpty || rawAmount == null || rawAmount <= 0) {
+    if (desc.isEmpty ||
+        cat.isEmpty ||
+        date.isEmpty ||
+        rawAmount == null ||
+        rawAmount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all fields with valid data')),
       );
@@ -150,8 +169,14 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
         final isQueued = res['status'] == 'queued';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isQueued ? 'Offline: Expense queued locally.' : 'Expense added successfully!'),
-            backgroundColor: isQueued ? Colors.amber.shade800 : Colors.green.shade700,
+            content: Text(
+              isQueued
+                  ? 'Offline: Expense queued locally.'
+                  : 'Expense added successfully!',
+            ),
+            backgroundColor: isQueued
+                ? Colors.amber.shade800
+                : Colors.green.shade700,
           ),
         );
       }
@@ -160,7 +185,10 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error adding expense: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error adding expense: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     } finally {
@@ -168,7 +196,13 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
     }
   }
 
-  Future<void> _updateExpense(int id, String desc, double baseAmount, String cat, String date) async {
+  Future<void> _updateExpense(
+    int id,
+    String desc,
+    double baseAmount,
+    String cat,
+    String date,
+  ) async {
     try {
       await widget.syncService.apiService.updateExpense(
         id,
@@ -181,7 +215,10 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating expense: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error updating expense: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -194,7 +231,10 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting expense: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error deleting expense: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
@@ -207,12 +247,17 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
       if (d == null) return false;
 
       if (_viewMode == 'day') {
-        return d.year == _selectedDate.year && d.month == _selectedDate.month && d.day == _selectedDate.day;
+        return d.year == _selectedDate.year &&
+            d.month == _selectedDate.month &&
+            d.day == _selectedDate.day;
       } else if (_viewMode == 'week') {
-        final start = _selectedDate.subtract(Duration(days: _selectedDate.weekday % 7));
+        final start = _selectedDate.subtract(
+          Duration(days: _selectedDate.weekday % 7),
+        );
         final startDate = DateTime(start.year, start.month, start.day);
         final endDate = startDate.add(const Duration(days: 7));
-        return (d.isAfter(startDate) || d.isAtSameMomentAs(startDate)) && d.isBefore(endDate);
+        return (d.isAfter(startDate) || d.isAtSameMomentAs(startDate)) &&
+            d.isBefore(endDate);
       } else if (_viewMode == 'month') {
         return d.year == _selectedDate.year && d.month == _selectedDate.month;
       } else {
@@ -255,7 +300,11 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                       end: Alignment.bottomRight,
                     ),
                     boxShadow: [
-                      BoxShadow(color: Colors.black26, blurRadius: 16, offset: Offset(0, 6)),
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 16,
+                        offset: Offset(0, 6),
+                      ),
                     ],
                   ),
                   child: Column(
@@ -284,24 +333,41 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                             children: [
                               // Currency Selector
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.22),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.5)),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                  ),
                                 ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<AppCurrency>(
                                     value: _currency,
                                     dropdownColor: const Color(0xFF312E81),
-                                    icon: const Icon(Icons.arrow_drop_down, color: Colors.white, size: 18),
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                    icon: const Icon(
+                                      Icons.arrow_drop_down,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
                                     selectedItemBuilder: (context) {
                                       return AppCurrency.values.map((c) {
                                         return Center(
                                           child: Text(
                                             '${c.symbol} ${c.code}',
-                                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                            ),
                                           ),
                                         );
                                       }).toList();
@@ -313,7 +379,8 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                                       );
                                     }).toList(),
                                     onChanged: (val) {
-                                      if (val != null) setState(() => _currency = val);
+                                      if (val != null)
+                                        setState(() => _currency = val);
                                     },
                                   ),
                                 ),
@@ -323,7 +390,11 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                               IconButton(
                                 constraints: const BoxConstraints(),
                                 padding: EdgeInsets.zero,
-                                icon: const Icon(Icons.dns_outlined, color: Colors.white, size: 22),
+                                icon: const Icon(
+                                  Icons.dns_outlined,
+                                  color: Colors.white,
+                                  size: 22,
+                                ),
                                 tooltip: 'Server Details',
                                 onPressed: () {
                                   ServerSettingsDialog.show(
@@ -343,7 +414,11 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                                   label: Text('$totalPendingCount'),
                                   backgroundColor: Colors.amber.shade400,
                                   textColor: Colors.black87,
-                                  child: const Icon(Icons.cloud_sync_outlined, color: Colors.white, size: 26),
+                                  child: const Icon(
+                                    Icons.cloud_sync_outlined,
+                                    color: Colors.white,
+                                    size: 26,
+                                  ),
                                 ),
                                 tooltip: 'Sync Queue',
                                 onPressed: () {
@@ -367,7 +442,9 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
-                          children: ['day', 'week', 'month', 'year'].map((mode) {
+                          children: ['day', 'week', 'month', 'year'].map((
+                            mode,
+                          ) {
                             final isActive = _viewMode == mode;
                             return Padding(
                               padding: const EdgeInsets.only(right: 8),
@@ -378,18 +455,32 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                                 },
                                 borderRadius: BorderRadius.circular(20),
                                 child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.18),
+                                    color: isActive
+                                        ? Colors.white
+                                        : Colors.white.withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(20),
                                     boxShadow: isActive
-                                        ? [BoxShadow(color: Colors.black.withValues(alpha: 0.15), blurRadius: 6)]
+                                        ? [
+                                            BoxShadow(
+                                              color: Colors.black.withValues(
+                                                alpha: 0.15,
+                                              ),
+                                              blurRadius: 6,
+                                            ),
+                                          ]
                                         : null,
                                   ),
                                   child: Text(
                                     mode[0].toUpperCase() + mode.substring(1),
                                     style: TextStyle(
-                                      color: isActive ? const Color(0xFF4F46E5) : Colors.white,
+                                      color: isActive
+                                          ? const Color(0xFF4F46E5)
+                                          : Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                     ),
@@ -407,7 +498,11 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                         children: [
                           IconButton(
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.arrow_left, color: Colors.white, size: 26),
+                            icon: const Icon(
+                              Icons.arrow_left,
+                              color: Colors.white,
+                              size: 26,
+                            ),
                             onPressed: () => _stepDate(-1),
                           ),
                           Expanded(
@@ -422,28 +517,43 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                                 if (picked != null) {
                                   setState(() {
                                     _selectedDate = picked;
-                                    _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
+                                    _dateController.text = DateFormat(
+                                      'yyyy-MM-dd',
+                                    ).format(picked);
                                   });
                                   _fetchExpenses();
                                 }
                               },
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.4),
+                                  ),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.calendar_month, color: Colors.white, size: 16),
+                                    const Icon(
+                                      Icons.calendar_month,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
                                     const SizedBox(width: 6),
                                     Flexible(
                                       child: Text(
-                                        DateFormat('yyyy-MM-dd').format(_selectedDate),
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                        DateFormat('yyyy-MM-dd')
+                                            .format(_selectedDate),
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                         overflow: TextOverflow.ellipsis,
                                         maxLines: 1,
                                       ),
@@ -455,23 +565,33 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                           ),
                           IconButton(
                             visualDensity: VisualDensity.compact,
-                            icon: const Icon(Icons.arrow_right, color: Colors.white, size: 26),
+                            icon: const Icon(
+                              Icons.arrow_right,
+                              color: Colors.white,
+                              size: 26,
+                            ),
                             onPressed: () => _stepDate(1),
                           ),
                           TextButton(
                             style: TextButton.styleFrom(
                               foregroundColor: Colors.white,
                               visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                             ),
                             onPressed: () {
                               setState(() {
                                 _selectedDate = DateTime.now();
-                                _dateController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
+                                _dateController.text = DateFormat('yyyy-MM-dd')
+                                    .format(DateTime.now());
                               });
                               _fetchExpenses();
                             },
-                            child: const Text('Today', style: TextStyle(fontWeight: FontWeight.bold)),
+                            child: const Text(
+                              'Today',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
                           ),
                         ],
                       ),
@@ -489,9 +609,14 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     color: isOnline
-                        ? (totalPendingCount > 0 ? Colors.amber.shade50 : Colors.green.shade50)
+                        ? (totalPendingCount > 0
+                              ? Colors.amber.shade50
+                              : Colors.green.shade50)
                         : Colors.deepOrange.shade50,
                     child: Row(
                       children: [
@@ -509,31 +634,53 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  isOnline ? 'Online: ${widget.syncService.apiService.baseUrl}' : 'Offline: Tap to edit server',
+                                  isOnline
+                                      ? 'Online: ${widget.syncService.apiService.baseUrl}'
+                                      : 'Offline: Tap to edit server',
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: isOnline ? Colors.green.shade800 : Colors.deepOrange.shade900,
+                                    color: isOnline
+                                        ? Colors.green.shade800
+                                        : Colors.deepOrange.shade900,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              Icon(Icons.edit, size: 13, color: isOnline ? Colors.green.shade700 : Colors.deepOrange.shade700),
+                              Icon(
+                                Icons.edit,
+                                size: 13,
+                                color: isOnline
+                                    ? Colors.green.shade700
+                                    : Colors.deepOrange.shade700,
+                              ),
                             ],
                           ),
                         ),
-                        if (widget.syncService.rustBridge.isNativeAvailable) ...[
+                        if (widget
+                            .syncService
+                            .rustBridge
+                            .isNativeAvailable) ...[
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.deepPurple.shade50,
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: Colors.deepPurple.shade200),
+                              border: Border.all(
+                                color: Colors.deepPurple.shade200,
+                              ),
                             ),
                             child: const Text(
                               '⚡ Rust Engine',
-                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.deepPurple),
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.deepPurple,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -541,7 +688,11 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                         if (totalPendingCount > 0)
                           Text(
                             '$totalPendingCount queued',
-                            style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber.shade900),
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber.shade900,
+                            ),
                           ),
                       ],
                     ),
@@ -560,7 +711,13 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: Text(_errorMessage!, style: const TextStyle(color: Color(0xFF9B1C1C), fontSize: 13)),
+                          child: Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              color: Color(0xFF9B1C1C),
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
@@ -570,7 +727,10 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                               onServerChanged: _fetchExpenses,
                             );
                           },
-                          child: const Text('Edit Server', style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: const Text(
+                            'Edit Server',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ],
                     ),
@@ -585,7 +745,11 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
-                        BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 2)),
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
                       ],
                     ),
                     child: Column(
@@ -593,14 +757,21 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                       children: [
                         const Text(
                           'Add New Expense',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1E293B),
+                          ),
                         ),
                         const SizedBox(height: 14),
                         TextField(
                           controller: _descController,
                           decoration: const InputDecoration(
                             hintText: 'Description',
-                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
                             border: OutlineInputBorder(),
                           ),
                         ),
@@ -610,10 +781,16 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                             Expanded(
                               child: TextField(
                                 controller: _amountController,
-                                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
                                 decoration: InputDecoration(
                                   hintText: 'Amount (${_currency.symbol})',
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
                                   border: const OutlineInputBorder(),
                                 ),
                               ),
@@ -624,7 +801,10 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                                 controller: _catController,
                                 decoration: const InputDecoration(
                                   hintText: 'Category',
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -639,7 +819,10 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                                 controller: _dateController,
                                 decoration: const InputDecoration(
                                   hintText: 'Date (YYYY-MM-DD)',
-                                  contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 10,
+                                  ),
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -649,13 +832,30 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF4F46E5),
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                               onPressed: _isAdding ? null : _addExpense,
                               child: _isAdding
-                                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                                  : const Text('Add Expense', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Add Expense',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                             ),
                           ],
                         ),
@@ -667,21 +867,42 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
                 // ============ View Mode Toggle for Month / Year ============
                 if (_viewMode == 'month' || _viewMode == 'year')
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
                           child: Text(
-                            _showTableForMonthYear ? 'Spreadsheet Table View' : 'Spend Grid Heatmap',
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF64748B)),
+                            _showTableForMonthYear
+                                ? 'Spreadsheet Table View'
+                                : 'Spend Grid Heatmap',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              color: Color(0xFF64748B),
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         TextButton.icon(
-                          onPressed: () => setState(() => _showTableForMonthYear = !_showTableForMonthYear),
-                          icon: Icon(_showTableForMonthYear ? Icons.grid_view : Icons.table_chart, size: 16),
-                          label: Text(_showTableForMonthYear ? 'Switch to Grid' : 'Switch to Table'),
+                          onPressed: () => setState(
+                            () => _showTableForMonthYear =
+                                !_showTableForMonthYear,
+                          ),
+                          icon: Icon(
+                            _showTableForMonthYear
+                                ? Icons.grid_view
+                                : Icons.table_chart,
+                            size: 16,
+                          ),
+                          label: Text(
+                            _showTableForMonthYear
+                                ? 'Switch to Grid'
+                                : 'Switch to Table',
+                          ),
                         ),
                       ],
                     ),
@@ -689,7 +910,10 @@ class _WebStyleAppScreenState extends State<WebStyleAppScreen> {
 
                 // ============ Content Container ============
                 if (_isLoading)
-                  const Padding(padding: EdgeInsets.all(40), child: Center(child: CircularProgressIndicator()))
+                  const Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
                 else if (_viewMode == 'day')
                   DayExcelView(
                     expenses: _expenses,

@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:http/http.dart' as http;
+
 import '../models/chat_models.dart';
 
 class AIChatResponse {
@@ -25,7 +27,9 @@ class AIChatResponse {
       sessionId: json['session_id'] as String? ?? '',
       message: json['message'] as String? ?? '',
       status: json['status'] as String? ?? 'idle',
-      draft: json['draft'] != null ? ExpenseDraft.fromJson(json['draft'] as Map<String, dynamic>) : null,
+      draft: json['draft'] != null
+          ? ExpenseDraft.fromJson(json['draft'] as Map<String, dynamic>)
+          : null,
       actionRequired: json['action_required'] as String? ?? 'none',
       savedExpenseId: json['saved_expense_id'] as int?,
     );
@@ -59,17 +63,17 @@ class AIChatService {
 
   Future<AIChatResponse> sendMessage(String message, String sessionId) async {
     final uri = Uri.parse('$baseUrl/api/chat/message');
-    final res = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'message': message,
-        'session_id': sessionId,
-      }),
-    ).timeout(const Duration(seconds: 20));
+    final res = await http
+        .post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'message': message, 'session_id': sessionId}),
+        )
+        .timeout(const Duration(seconds: 20));
 
     if (res.statusCode == 200) {
-      final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      final data =
+          jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
       return AIChatResponse.fromJson(data);
     } else {
       throw Exception('Server returned ${res.statusCode}: ${res.body}');
@@ -78,16 +82,17 @@ class AIChatService {
 
   Future<AIChatResponse> confirmDraft(String sessionId) async {
     final uri = Uri.parse('$baseUrl/api/chat/confirm');
-    final res = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'session_id': sessionId,
-      }),
-    ).timeout(const Duration(seconds: 15));
+    final res = await http
+        .post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'session_id': sessionId}),
+        )
+        .timeout(const Duration(seconds: 15));
 
     if (res.statusCode == 200) {
-      final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      final data =
+          jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
       return AIChatResponse.fromJson(data);
     } else {
       throw Exception('Failed to confirm draft: ${res.statusCode}');
@@ -96,16 +101,17 @@ class AIChatService {
 
   Future<AIChatResponse> cancelDraft(String sessionId) async {
     final uri = Uri.parse('$baseUrl/api/chat/cancel');
-    final res = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'session_id': sessionId,
-      }),
-    ).timeout(const Duration(seconds: 10));
+    final res = await http
+        .post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({'session_id': sessionId}),
+        )
+        .timeout(const Duration(seconds: 10));
 
     if (res.statusCode == 200) {
-      final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      final data =
+          jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
       return AIChatResponse.fromJson(data);
     } else {
       throw Exception('Failed to cancel draft: ${res.statusCode}');

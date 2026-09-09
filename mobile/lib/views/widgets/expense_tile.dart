@@ -91,7 +91,9 @@ class ExpenseTile extends StatelessWidget {
       ),
       color: isPending
           ? Colors.amber.shade50.withValues(alpha: 0.5)
-          : (isFailed ? Colors.red.shade50.withValues(alpha: 0.5) : Colors.white),
+          : (isFailed
+                ? Colors.red.shade50.withValues(alpha: 0.5)
+                : Colors.white),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Row(
@@ -100,7 +102,11 @@ class ExpenseTile extends StatelessWidget {
             CircleAvatar(
               radius: 20,
               backgroundColor: catColor.withValues(alpha: 0.12),
-              child: Icon(_getCategoryIcon(category), color: catColor, size: 20),
+              child: Icon(
+                _getCategoryIcon(category),
+                color: catColor,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
 
@@ -122,7 +128,10 @@ class ExpenseTile extends StatelessWidget {
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: catColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(4),
@@ -147,7 +156,10 @@ class ExpenseTile extends StatelessWidget {
                       if (isPending) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.amber.shade200,
                             borderRadius: BorderRadius.circular(4),
@@ -165,7 +177,10 @@ class ExpenseTile extends StatelessWidget {
                       if (isFailed) ...[
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.red.shade200,
                             borderRadius: BorderRadius.circular(4),

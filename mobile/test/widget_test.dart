@@ -82,26 +82,38 @@ void main() {
   });
 
   test('ApiService sanitizeUrl formats addresses properly', () {
-    expect(ApiService.sanitizeUrl('192.168.1.50:13000/api/'), 'http://192.168.1.50:13000/api');
-    expect(ApiService.sanitizeUrl('https://api.myexpense.com///'), 'https://api.myexpense.com');
-    expect(ApiService.sanitizeUrl('  http://localhost:13000/api  '), 'http://localhost:13000/api');
+    expect(
+      ApiService.sanitizeUrl('192.168.1.50:13000/api/'),
+      'http://192.168.1.50:13000/api',
+    );
+    expect(
+      ApiService.sanitizeUrl('https://api.myexpense.com///'),
+      'https://api.myexpense.com',
+    );
+    expect(
+      ApiService.sanitizeUrl('  http://localhost:13000/api  '),
+      'http://localhost:13000/api',
+    );
   });
 
-  test('ApiService loads and persists server URL via SharedPreferences', () async {
-    SharedPreferences.setMockInitialValues({
-      ApiService.prefKey: 'http://192.168.1.100:13000/api',
-    });
+  test(
+    'ApiService loads and persists server URL via SharedPreferences',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        ApiService.prefKey: 'http://192.168.1.100:13000/api',
+      });
 
-    final api = ApiService();
-    await api.loadSavedBaseUrl();
-    expect(api.baseUrl, 'http://192.168.1.100:13000/api');
+      final api = ApiService();
+      await api.loadSavedBaseUrl();
+      expect(api.baseUrl, 'http://192.168.1.100:13000/api');
 
-    await api.updateBaseUrl('http://myserver.lan:9000');
-    expect(api.baseUrl, 'http://myserver.lan:9000');
+      await api.updateBaseUrl('http://myserver.lan:9000');
+      expect(api.baseUrl, 'http://myserver.lan:9000');
 
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getString(ApiService.prefKey), 'http://myserver.lan:9000');
-  });
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString(ApiService.prefKey), 'http://myserver.lan:9000');
+    },
+  );
 
   test('AppCurrency formats correctly for USD, INR, and CNY', () {
     expect(AppCurrency.usd.format(10.0), '\$10.00');
@@ -110,23 +122,24 @@ void main() {
     expect(AppCurrency.inr.toBase(840.0), 10.0);
   });
 
-  testWidgets('WebStyleAppScreen renders without RenderFlex overflow on small screens', (tester) async {
-    tester.view.physicalSize = const Size(320, 568);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(() {
-      tester.view.resetPhysicalSize();
-      tester.view.resetDevicePixelRatio();
-    });
+  testWidgets(
+    'WebStyleAppScreen renders without RenderFlex overflow on small screens',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
 
-    final sync = SyncService();
-    await tester.pumpWidget(
-      MaterialApp(
-        home: WebStyleAppScreen(syncService: sync),
-      ),
-    );
-    await tester.pump();
+      final sync = SyncService();
+      await tester.pumpWidget(
+        MaterialApp(home: WebStyleAppScreen(syncService: sync)),
+      );
+      await tester.pump();
 
-    expect(tester.takeException(), isNull);
-    expect(find.text('Expense Organizer'), findsOneWidget);
-  });
+      expect(tester.takeException(), isNull);
+      expect(find.text('Expense Organizer'), findsOneWidget);
+    },
+  );
 }

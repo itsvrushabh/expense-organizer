@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+
 import 'package:ffi/ffi.dart';
 import 'package:flutter/foundation.dart';
+
 import '../models/queue_item.dart';
 
 // C function signatures
@@ -34,7 +36,10 @@ typedef _RustGetCountC = Int32 Function(Pointer<Utf8>);
 typedef _RustGetCountDart = int Function(Pointer<Utf8>);
 
 typedef _RustSyncQueueC = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
-typedef _RustSyncQueueDart = Pointer<Utf8> Function(Pointer<Utf8>, Pointer<Utf8>);
+typedef _RustSyncQueueDart = Pointer<Utf8> Function(
+  Pointer<Utf8>,
+  Pointer<Utf8>,
+);
 
 class RustBridge {
   static final RustBridge instance = RustBridge._internal();
@@ -90,7 +95,9 @@ class RustBridge {
         _bindFunctions();
       }
     } catch (e) {
-      debugPrint('Note: Rust native library not loaded ($e). Using Dart engine fallback.');
+      debugPrint(
+        'Note: Rust native library not loaded ($e). Using Dart engine fallback.',
+      );
       _dylib = null;
     }
   }
@@ -182,7 +189,9 @@ class RustBridge {
 
         final list = jsonDecode(jsonStr);
         if (list is List) {
-          return list.map((item) => QueueItem.fromJson(item as Map<String, dynamic>)).toList();
+          return list
+              .map((item) => QueueItem.fromJson(item as Map<String, dynamic>))
+              .toList();
         }
       } catch (e) {
         debugPrint('Error getting queue from Rust: $e');
@@ -204,7 +213,9 @@ class RustBridge {
 
         final list = jsonDecode(jsonStr);
         if (list is List) {
-          return list.map((item) => QueueItem.fromJson(item as Map<String, dynamic>)).toList();
+          return list
+              .map((item) => QueueItem.fromJson(item as Map<String, dynamic>))
+              .toList();
         }
       } catch (e) {
         debugPrint('Error getting pending queue from Rust: $e');
@@ -236,19 +247,29 @@ class RustBridge {
       final urlPtr = apiUrl.toNativeUtf8();
       try {
         final resPtr = _rustSyncQueue!(pathPtr, urlPtr);
-        if (resPtr == nullptr) return {'success': false, 'errors': ['Null pointer result']};
+        if (resPtr == nullptr)
+          return {
+            'success': false,
+            'errors': ['Null pointer result'],
+          };
         final jsonStr = resPtr.toDartString();
         _rustFreeString!(resPtr);
 
         return jsonDecode(jsonStr) as Map<String, dynamic>;
       } catch (e) {
-        return {'success': false, 'errors': [e.toString()]};
+        return {
+          'success': false,
+          'errors': [e.toString()],
+        };
       } finally {
         calloc.free(pathPtr);
         calloc.free(urlPtr);
       }
     }
-    return {'success': false, 'errors': ['Rust engine not available']};
+    return {
+      'success': false,
+      'errors': ['Rust engine not available'],
+    };
   }
 
   int clearSynced(String queuePath) {
