@@ -16,6 +16,8 @@ dist/
 # Coverage artifacts
 .coverage
 htmlcov/
+coverage/
+*.lcov
 # AI Model binaries
 *.gguf
 expense-helper/mobile/ios/*
