@@ -1,7 +1,7 @@
-use std::ffi::{CStr, CString};
-use std::os::raw::{c_char, c_double, c_int};
 use crate::queue::QueueManager;
 use crate::sync::{check_online, sync_pending_queue};
+use std::ffi::{CStr, CString};
+use std::os::raw::{c_char, c_double, c_int};
 
 unsafe fn c_to_str<'a>(ptr: *const c_char) -> Result<&'a str, String> {
     if ptr.is_null() {
@@ -17,6 +17,8 @@ fn to_c_string(s: String) -> *mut c_char {
 }
 
 #[no_mangle]
+/// # Safety
+/// `s` must be a pointer previously returned by this library's string-returning functions.
 pub unsafe extern "C" fn rust_free_string(s: *mut c_char) {
     if !s.is_null() {
         drop(CString::from_raw(s));
@@ -24,6 +26,8 @@ pub unsafe extern "C" fn rust_free_string(s: *mut c_char) {
 }
 
 #[no_mangle]
+/// # Safety
+/// `api_url` must point to a valid null-terminated UTF-8 string for the call duration.
 pub unsafe extern "C" fn rust_check_server_online(
     api_url: *const c_char,
     timeout_ms: u32,
@@ -41,6 +45,8 @@ pub unsafe extern "C" fn rust_check_server_online(
 }
 
 #[no_mangle]
+/// # Safety
+/// All string pointers must point to valid null-terminated UTF-8 strings for the call duration.
 pub unsafe extern "C" fn rust_enqueue_expense(
     queue_path: *const c_char,
     description: *const c_char,
@@ -73,6 +79,8 @@ pub unsafe extern "C" fn rust_enqueue_expense(
 }
 
 #[no_mangle]
+/// # Safety
+/// `queue_path` must point to a valid null-terminated UTF-8 string for the call duration.
 pub unsafe extern "C" fn rust_get_queue(queue_path: *const c_char) -> *mut c_char {
     let path = match c_to_str(queue_path) {
         Ok(p) => p,
@@ -81,12 +89,16 @@ pub unsafe extern "C" fn rust_get_queue(queue_path: *const c_char) -> *mut c_cha
 
     let qm = QueueManager::new(path);
     match qm.get_items() {
-        Ok(items) => to_c_string(serde_json::to_string(&items).unwrap_or_else(|_| "[]".to_string())),
+        Ok(items) => {
+            to_c_string(serde_json::to_string(&items).unwrap_or_else(|_| "[]".to_string()))
+        }
         Err(e) => to_c_string(format!(r#"{{"error":"{e}"}}"#)),
     }
 }
 
 #[no_mangle]
+/// # Safety
+/// `queue_path` must point to a valid null-terminated UTF-8 string for the call duration.
 pub unsafe extern "C" fn rust_get_pending_queue(queue_path: *const c_char) -> *mut c_char {
     let path = match c_to_str(queue_path) {
         Ok(p) => p,
@@ -95,12 +107,16 @@ pub unsafe extern "C" fn rust_get_pending_queue(queue_path: *const c_char) -> *m
 
     let qm = QueueManager::new(path);
     match qm.get_pending_items() {
-        Ok(items) => to_c_string(serde_json::to_string(&items).unwrap_or_else(|_| "[]".to_string())),
+        Ok(items) => {
+            to_c_string(serde_json::to_string(&items).unwrap_or_else(|_| "[]".to_string()))
+        }
         Err(e) => to_c_string(format!(r#"{{"error":"{e}"}}"#)),
     }
 }
 
 #[no_mangle]
+/// # Safety
+/// `queue_path` must point to a valid null-terminated UTF-8 string for the call duration.
 pub unsafe extern "C" fn rust_get_queue_count(queue_path: *const c_char) -> c_int {
     let path = match c_to_str(queue_path) {
         Ok(p) => p,
@@ -115,6 +131,8 @@ pub unsafe extern "C" fn rust_get_queue_count(queue_path: *const c_char) -> c_in
 }
 
 #[no_mangle]
+/// # Safety
+/// Both pointers must point to valid null-terminated UTF-8 strings for the call duration.
 pub unsafe extern "C" fn rust_sync_queue(
     queue_path: *const c_char,
     api_url: *const c_char,
@@ -134,6 +152,8 @@ pub unsafe extern "C" fn rust_sync_queue(
 }
 
 #[no_mangle]
+/// # Safety
+/// `queue_path` must point to a valid null-terminated UTF-8 string for the call duration.
 pub unsafe extern "C" fn rust_clear_synced(queue_path: *const c_char) -> c_int {
     let path = match c_to_str(queue_path) {
         Ok(p) => p,

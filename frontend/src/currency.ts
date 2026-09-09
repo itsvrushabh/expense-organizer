@@ -28,10 +28,10 @@ export const CURRENCIES: { code: Currency; label: string }[] = [
 ]
 
 export function toBase(amount: number, currency: Currency): number {
-  return amount / RATES[currency]
+  return amount / RATES[currency];
 }
 
 export function formatCurrency(amount: number | undefined, currency: Currency): string {
-  if (amount === undefined) return '-'
-  return `${SYMBOLS[currency]}${(amount * RATES[currency]).toFixed(2)}`
+  if (amount === undefined) return "-";
+  return `${SYMBOLS[currency]}${(amount * RATES[currency]).toFixed(2)}`;
 }

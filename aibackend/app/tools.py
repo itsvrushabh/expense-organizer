@@ -1,7 +1,6 @@
 import logging
 import re
-from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from datetime import datetime
 
 from app.schemas import ExpenseDraft, ToolCall, ToolResult
 from app.expense_client import (
@@ -140,7 +139,7 @@ def tool_draft_expense(
     amount: float,
     category: str,
     date: str,
-    reference_date: Optional[datetime] = None,
+    reference_date: datetime | None = None,
 ) -> ToolResult:
     """Executes draft_expense function."""
     normalized_date = normalize_iso_date(date, reference_date)
@@ -176,8 +175,8 @@ def tool_draft_expense(
 def tool_update_draft_field(
     field: str,
     value: str,
-    current_draft: Optional[ExpenseDraft],
-    reference_date: Optional[datetime] = None,
+    current_draft: ExpenseDraft | None,
+    reference_date: datetime | None = None,
 ) -> ToolResult:
     """Executes update_draft_field function."""
     if not current_draft:
@@ -225,7 +224,7 @@ async def tool_commit_expense(
     amount: float,
     category: str,
     date: str,
-    reference_date: Optional[datetime] = None,
+    reference_date: datetime | None = None,
 ) -> ToolResult:
     """Executes commit_expense function to persist expense to core DB."""
     normalized_date = normalize_iso_date(date, reference_date)
@@ -261,7 +260,7 @@ def tool_ask_clarification(missing_field: str, question: str) -> ToolResult:
     )
 
 
-def tool_cancel_draft(reason: Optional[str] = None) -> ToolResult:
+def tool_cancel_draft(reason: str | None = None) -> ToolResult:
     """Executes cancel_draft function."""
     msg = "🚫 Discarded the expense draft. What else can I help you with?"
     if reason:
@@ -298,8 +297,8 @@ async def tool_refresh_exchange_rates() -> ToolResult:
 
 async def execute_tool(
     tool_call: ToolCall,
-    current_draft: Optional[ExpenseDraft] = None,
-    reference_date: Optional[datetime] = None,
+    current_draft: ExpenseDraft | None = None,
+    reference_date: datetime | None = None,
 ) -> ToolResult:
     """
     Dispatches tool call to corresponding Python function.
@@ -326,7 +325,9 @@ async def execute_tool(
         )
     elif t_name == "commit_expense":
         return await tool_commit_expense(
-            description=args.get("description", current_draft.description if current_draft else "Expense"),
+            description=args.get(
+                "description", current_draft.description if current_draft else "Expense"
+            ),
             amount=float(args.get("amount", current_draft.amount if current_draft else 0.0)),
             category=args.get("category", current_draft.category if current_draft else "Other"),
             date=args.get("date", current_draft.date if current_draft else "today"),

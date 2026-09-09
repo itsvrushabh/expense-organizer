@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../services/sync_service.dart';
 import '../queue_screen.dart';
 
@@ -39,7 +40,8 @@ class StatusIndicator extends StatelessWidget {
               color: isOnline ? Colors.green : Colors.deepOrange,
               boxShadow: [
                 BoxShadow(
-                  color: (isOnline ? Colors.green : Colors.deepOrange).withValues(alpha: 0.4),
+                  color: (isOnline ? Colors.green : Colors.deepOrange)
+                      .withValues(alpha: 0.4),
                   blurRadius: 6,
                   spreadRadius: 2,
                 ),
@@ -54,7 +56,9 @@ class StatusIndicator extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 13,
-              color: isOnline ? Colors.green.shade800 : Colors.deepOrange.shade900,
+              color: isOnline
+                  ? Colors.green.shade800
+                  : Colors.deepOrange.shade900,
             ),
           ),
 
@@ -91,7 +95,11 @@ class StatusIndicator extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.cloud_upload_outlined, size: 14, color: Colors.brown),
+                    const Icon(
+                      Icons.cloud_upload_outlined,
+                      size: 14,
+                      color: Colors.brown,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '$pending Queued',
@@ -120,7 +128,9 @@ class StatusIndicator extends StatelessWidget {
               isOnline ? 'In Sync' : 'Ready to queue',
               style: TextStyle(
                 fontSize: 12,
-                color: isOnline ? Colors.green.shade700 : Colors.deepOrange.shade700,
+                color: isOnline
+                    ? Colors.green.shade700
+                    : Colors.deepOrange.shade700,
               ),
             ),
           ],

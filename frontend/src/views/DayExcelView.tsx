@@ -1,13 +1,13 @@
-import { useState } from 'react'
-import type { Expense } from '../types'
-import { formatCurrency, type Currency } from '../currency'
-import { categoryColor } from '../colors'
+import { useState } from "react";
+import { categoryColor } from "../colors";
+import { type Currency, formatCurrency } from "../currency";
+import type { Expense } from "../types";
 
 interface ExpenseDraft {
-  description: string
-  amount: string
-  category: string
-  date: string
+  description: string;
+  amount: string;
+  category: string;
+  date: string;
 }
 
 function toDraft(expense: Expense): ExpenseDraft {
@@ -16,7 +16,7 @@ function toDraft(expense: Expense): ExpenseDraft {
     amount: String(expense.amount),
     category: expense.category,
     date: expense.date,
-  }
+  };
 }
 
 export function DayExcelView({
@@ -25,39 +25,48 @@ export function DayExcelView({
   onUpdate,
   onDelete,
 }: {
-  expenses: Expense[]
-  currency: Currency
+  expenses: Expense[];
+  currency: Currency;
   onUpdate: (
     id: number,
     data: { description: string; amount: number; category: string; date: string },
-  ) => Promise<void>
-  onDelete: (id: number) => Promise<void>
+  ) => Promise<void>;
+  onDelete: (id: number) => Promise<void>;
 }) {
-  const [editing, setEditing] = useState<{ id: number; draft: ExpenseDraft } | null>(null)
-  const categories = [...new Set(expenses.map((e) => e.category))]
+  const [editing, setEditing] = useState<{ id: number; draft: ExpenseDraft } | null>(null);
+  const categories = [...new Set(expenses.map((e) => e.category))];
 
-  const openEditor = (expense: Expense) => setEditing({ id: expense.id, draft: toDraft(expense) })
+  const openEditor = (expense: Expense) => setEditing({ id: expense.id, draft: toDraft(expense) });
 
   const saveEdit = async () => {
-    if (!editing) return
-    const amount = parseFloat(editing.draft.amount)
-    if (!editing.draft.description || !editing.draft.category || !editing.draft.date || Number.isNaN(amount)) {
-      return
+    if (!editing) return;
+    const amount = Number.parseFloat(editing.draft.amount);
+    if (
+      !editing.draft.description ||
+      !editing.draft.category ||
+      !editing.draft.date ||
+      Number.isNaN(amount)
+    ) {
+      return;
     }
     await onUpdate(editing.id, {
       description: editing.draft.description.trim(),
       amount,
       category: editing.draft.category.trim(),
       date: editing.draft.date,
-    })
-    setEditing(null)
-  }
+    });
+    setEditing(null);
+  };
 
   const removeExpense = async (expense: Expense) => {
-    if (window.confirm(`Delete "${expense.description}" (${formatCurrency(expense.amount, currency)})?`)) {
-      await onDelete(expense.id)
+    if (
+      window.confirm(
+        `Delete "${expense.description}" (${formatCurrency(expense.amount, currency)})?`,
+      )
+    ) {
+      await onDelete(expense.id);
     }
-  }
+  };
 
   return (
     <>
@@ -72,13 +81,16 @@ export function DayExcelView({
         </thead>
         <tbody>
           {categories.map((category) => {
-            const categoryExpenses = expenses.filter((e) => e.category === category)
-            const color = categoryColor(category)
+            const categoryExpenses = expenses.filter((e) => e.category === category);
+            const color = categoryColor(category);
             return categoryExpenses.map((expense, idx) => (
               <tr key={expense.id}>
                 {idx === 0 && (
                   <td rowSpan={categoryExpenses.length} className="category-cell">
-                    <span className="category-chip" style={{ background: color.bg, color: color.fg }}>
+                    <span
+                      className="category-chip"
+                      style={{ background: color.bg, color: color.fg }}
+                    >
                       {category}
                     </span>
                   </td>
@@ -94,7 +106,7 @@ export function DayExcelView({
                   </button>
                 </td>
               </tr>
-            ))
+            ));
           })}
           {expenses.length === 0 && (
             <tr>
@@ -111,7 +123,9 @@ export function DayExcelView({
           <div className="cell-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Edit Expense</h3>
-              <button className="modal-close" onClick={() => setEditing(null)} aria-label="Close">×</button>
+              <button className="modal-close" onClick={() => setEditing(null)} aria-label="Close">
+                ×
+              </button>
             </div>
             <div className="edit-form">
               <label>
@@ -119,17 +133,25 @@ export function DayExcelView({
                 <input
                   type="text"
                   value={editing.draft.description}
-                  onChange={(e) => setEditing({ ...editing, draft: { ...editing.draft, description: e.target.value } })}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      draft: { ...editing.draft, description: e.target.value },
+                    })
+                  }
                 />
               </label>
               <label>
-                Amount ({formatCurrency(parseFloat(editing.draft.amount || '0') || 0, currency)})
+                Amount (
+                {formatCurrency(Number.parseFloat(editing.draft.amount || "0") || 0, currency)})
                 <input
                   type="number"
                   step="0.01"
                   min="0.01"
                   value={editing.draft.amount}
-                  onChange={(e) => setEditing({ ...editing, draft: { ...editing.draft, amount: e.target.value } })}
+                  onChange={(e) =>
+                    setEditing({ ...editing, draft: { ...editing.draft, amount: e.target.value } })
+                  }
                 />
               </label>
               <label>
@@ -137,7 +159,12 @@ export function DayExcelView({
                 <input
                   type="text"
                   value={editing.draft.category}
-                  onChange={(e) => setEditing({ ...editing, draft: { ...editing.draft, category: e.target.value } })}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      draft: { ...editing.draft, category: e.target.value },
+                    })
+                  }
                 />
               </label>
               <label>
@@ -145,7 +172,9 @@ export function DayExcelView({
                 <input
                   type="date"
                   value={editing.draft.date}
-                  onChange={(e) => setEditing({ ...editing, draft: { ...editing.draft, date: e.target.value } })}
+                  onChange={(e) =>
+                    setEditing({ ...editing, draft: { ...editing.draft, date: e.target.value } })
+                  }
                 />
               </label>
             </div>
@@ -161,5 +190,5 @@ export function DayExcelView({
         </div>
       )}
     </>
-  )
+  );
 }

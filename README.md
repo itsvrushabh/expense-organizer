@@ -9,6 +9,7 @@ A modern, full-stack expense tracking platform designed for desktop, web, and mo
 All in-depth component and setup documentation is organized in the [`docs/`](docs/) directory:
 
 - 🚀 **[Setup & Deployment Guide](docs/setup.md)**: Docker Compose, local manual startup, environment variables, and troubleshooting.
+- 📦 **[GitHub CI and Release Status](docs/release.md)**: Main-branch, current-branch, workflow, version, and release status.
 - ⚙️ **[Backend Guide](docs/backend.md)**: FastAPI architecture, async routers, Pydantic v2 schemas, in-memory store, and 34 pytest tests.
 - 💻 **[Web Frontend Guide](docs/frontend.md)**: Bun + React 19 + TypeScript, Excel pivot table views, spend heatmaps, and `/api` proxy.
 - 📱 **[Mobile App & Rust Engine Guide](docs/mobile.md)**: Flutter client, Material 3 gradient UI, C-FFI Rust sync engine, offline queue, and build guides.
@@ -132,6 +133,13 @@ cd frontend
 bun x tsc --noEmit
 ```
 
+## GitHub Workflow and Release Status
+
+The complete status dashboard is maintained separately in [docs/release.md](docs/release.md).
+It contains the `main` branch status, current branch status, all CI sub-workflows, release
+status, version tags, artifact details, status meanings, and commands for inspecting another
+branch or commit.
+
 ---
 
 ## API Summary
@@ -178,8 +186,17 @@ expense-organizer/
 │   ├── mobile.md                 # Flutter mobile & Rust engine docs
 │   ├── expense-helper-mobile.md  # Flutter chat assistant docs
 │   ├── expense-helper-desktop.md # Desktop roadmap (on hold)
+│   ├── release.md                # Branch, workflow, version, and release status
 │   └── setup.md                  # Deployment & setup walkthrough
 ├── .github/
+│   ├── workflows/ci-python.yml     # Python tests, format, and lint
+│   ├── workflows/ci-frontend.yml   # Bun, Biome, and TypeScript checks
+│   ├── workflows/ci-flutter.yml    # Flutter application checks
+│   ├── workflows/ci-rust.yml       # Rust format, lint, and tests
+│   ├── workflows/ci-services.yml   # Docker and health checks
+│   ├── workflows/ci-success.yml    # Aggregate branch-protection status
+│   ├── workflows/release.yml       # Tagged mobile and container releases
+│   └── dependabot.yml              # Weekly dependency updates
 │   └── workflows/build-mobile.yml # CI/CD for Android & iOS builds
 ├── postgres_data/                # PostgreSQL host data directory (persisted outside container, gitignored)
 ├── backend/                      # Pure REST core backend (internal port 8000)
@@ -203,6 +220,7 @@ expense-organizer/
 │   └── requirements.txt
 ├── frontend/
 │   ├── index.ts                  # Bun HTTP server & /api reverse proxy
+│   ├── bun.lock                   # Committed frontend dependency lockfile
 │   ├── src/                      # React 19 TypeScript application
 │   ├── package.json
 │   └── Dockerfile

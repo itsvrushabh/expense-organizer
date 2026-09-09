@@ -3,7 +3,6 @@ from contextlib import asynccontextmanager
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from routers import categories, currencies, expenses
 from services.currency_service import start_currency_sync_worker
 import storage
@@ -85,6 +84,8 @@ app = create_app()
 
 if __name__ == "__main__":
     import os
+
     import uvicorn
+
     port = int(os.getenv("PORT", "8000"))
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

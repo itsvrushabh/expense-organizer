@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/sync_service.dart';
 
 class ServerSettingsDialog extends StatefulWidget {
@@ -11,7 +12,11 @@ class ServerSettingsDialog extends StatefulWidget {
     this.onServerChanged,
   });
 
-  static Future<void> show(BuildContext context, SyncService syncService, {VoidCallback? onServerChanged}) {
+  static Future<void> show(
+    BuildContext context,
+    SyncService syncService, {
+    VoidCallback? onServerChanged,
+  }) {
     return showDialog(
       context: context,
       builder: (ctx) => ServerSettingsDialog(
@@ -33,7 +38,9 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
   @override
   void initState() {
     super.initState();
-    _urlController = TextEditingController(text: widget.syncService.apiService.baseUrl);
+    _urlController = TextEditingController(
+      text: widget.syncService.apiService.baseUrl,
+    );
   }
 
   @override
@@ -75,7 +82,9 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
                 ? 'Connected to server: $url'
                 : 'Server URL saved. Server is currently offline.',
           ),
-          backgroundColor: widget.syncService.isOnline ? Colors.green.shade700 : Colors.amber.shade800,
+          backgroundColor: widget.syncService.isOnline
+              ? Colors.green.shade700
+              : Colors.amber.shade800,
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -100,7 +109,10 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
         children: [
           Icon(Icons.dns, color: Color(0xFF6366F1)),
           SizedBox(width: 8),
-          Text('Server Details', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            'Server Details',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
         ],
       ),
       content: SingleChildScrollView(
@@ -135,7 +147,11 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
             // Quick Preset Chips
             const Text(
               'Quick Presets:',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
             ),
             const SizedBox(height: 6),
             Wrap(
@@ -143,17 +159,26 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
               runSpacing: 4,
               children: [
                 ActionChip(
-                  label: const Text('Localhost (:13000)', style: TextStyle(fontSize: 11)),
+                  label: const Text(
+                    'Localhost (:13000)',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   avatar: const Icon(Icons.computer, size: 14),
                   onPressed: () => _applyPreset('http://localhost:13000/api'),
                 ),
                 ActionChip(
-                  label: const Text('Android Emulator (10.0.2.2)', style: TextStyle(fontSize: 11)),
+                  label: const Text(
+                    'Android Emulator (10.0.2.2)',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   avatar: const Icon(Icons.phone_android, size: 14),
                   onPressed: () => _applyPreset('http://10.0.2.2:13000/api'),
                 ),
                 ActionChip(
-                  label: const Text('Wi-Fi IP Prefix', style: TextStyle(fontSize: 11)),
+                  label: const Text(
+                    'Wi-Fi IP Prefix',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   avatar: const Icon(Icons.wifi, size: 14),
                   onPressed: () => _applyPreset('http://192.168.1.:13000/api'),
                 ),
@@ -167,7 +192,11 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
                 OutlinedButton.icon(
                   onPressed: _isTesting ? null : _testConnection,
                   icon: _isTesting
-                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Icon(Icons.network_check, size: 16),
                   label: const Text('Test Connection'),
                 ),
@@ -177,19 +206,30 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
             if (_testResult != null) ...[
               const SizedBox(height: 10),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
-                  color: (_testResult!['success'] == true) ? Colors.green.shade50 : Colors.red.shade50,
+                  color: (_testResult!['success'] == true)
+                      ? Colors.green.shade50
+                      : Colors.red.shade50,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: (_testResult!['success'] == true) ? Colors.green.shade300 : Colors.red.shade300,
+                    color: (_testResult!['success'] == true)
+                        ? Colors.green.shade300
+                        : Colors.red.shade300,
                   ),
                 ),
                 child: Row(
                   children: [
                     Icon(
-                      (_testResult!['success'] == true) ? Icons.check_circle : Icons.error_outline,
-                      color: (_testResult!['success'] == true) ? Colors.green.shade700 : Colors.red.shade700,
+                      (_testResult!['success'] == true)
+                          ? Icons.check_circle
+                          : Icons.error_outline,
+                      color: (_testResult!['success'] == true)
+                          ? Colors.green.shade700
+                          : Colors.red.shade700,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
@@ -198,7 +238,9 @@ class _ServerSettingsDialogState extends State<ServerSettingsDialog> {
                         _testResult!['message']?.toString() ?? '',
                         style: TextStyle(
                           fontSize: 12,
-                          color: (_testResult!['success'] == true) ? Colors.green.shade900 : Colors.red.shade900,
+                          color: (_testResult!['success'] == true)
+                              ? Colors.green.shade900
+                              : Colors.red.shade900,
                           fontWeight: FontWeight.w500,
                         ),
                       ),

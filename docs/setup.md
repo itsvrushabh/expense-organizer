@@ -125,3 +125,35 @@ docker-compose logs -f frontend
 docker-compose logs -f aibackend
 docker-compose logs -f aimodel
 ```
+
+## GitHub Actions CI and Releases
+
+Every commit pushed to any branch and every pull request runs the CI sub-workflows in
+`.github/workflows/`. The visible workflows are `ci-python.yml`, `ci-frontend.yml`,
+`ci-flutter.yml`, `ci-rust.yml`, and `ci-services.yml`. Together they cover Python tests
+and Ruff formatting/linting, frontend TypeScript and Biome checks, both Flutter
+applications, the Rust engine, Docker configuration, and lightweight service probes.
+
+`ci-success.yml` starts with the sub-workflows, polls their exact commit and event until
+they complete, and provides the aggregate branch-protection check. Require the displayed
+`CI / Success / ci-success` check in the repository branch rules.
+
+`ci-services.yml` runs lightweight backend/frontend Docker startup probes. Model health is
+not currently run by CI or release publishing because it requires the GGUF model artifact
+and GPU support; mount the model separately when deploying `aimodel`.
+
+Version tags matching `vMAJOR.MINOR.PATCH` trigger `.github/workflows/release.yml`. The
+release workflow builds preview Android APKs and unsigned iOS IPAs for both mobile
+applications, publishes immutable version-tagged service images to GitHub Container
+Registry, and attaches the mobile artifacts to the GitHub release. Temporary mobile
+artifacts are retained for seven days; release attachments are retained by GitHub Releases.
+The `aimodel` image requires the GGUF model to be mounted separately at `/app/models`.
+Manual release runs are validation-only and do not publish images or create releases.
+Only valid `vMAJOR.MINOR.PATCH` tags publish.
+
+Release publishing requires the workflow's `GITHUB_TOKEN` package and release permissions.
+Android currently uses the repository's preview signing configuration; production Android
+distribution requires signing secrets. Signed iOS builds require Apple signing secrets and
+reviewed native platform projects. Dependabot opens weekly dependency pull requests for
+Python, Bun/npm, Cargo, Flutter/Dart, Docker, and GitHub Actions; patch/minor updates are
+grouped while major upgrades remain separate.

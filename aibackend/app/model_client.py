@@ -2,22 +2,81 @@ import json
 import logging
 import re
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Any
+
 import httpx
 
-from app.config import AIMODEL_URL, STANDARD_CATEGORIES
+from app.config import AIMODEL_URL
 from app.schemas import ExpenseDraft, ToolCall
 from app.tools import TOOLS_SCHEMA
 
 logger = logging.getLogger("aibackend.model_client")
 
 CATEGORY_KEYWORDS = {
-    "Food": ["coffee", "tea", "lunch", "dinner", "breakfast", "burger", "pizza", "restaurant", "cafe", "snack", "beer", "meal", "food"],
-    "Groceries": ["grocery", "groceries", "supermarket", "walmart", "dmart", "vegetables", "fruits", "milk", "bread", "costco"],
-    "Transport": ["uber", "ola", "lyft", "taxi", "bus", "train", "metro", "subway", "fuel", "petrol", "gas", "diesel", "parking"],
-    "Shopping": ["amazon", "shoes", "clothes", "shirt", "pants", "dress", "mall", "shopping", "electronics"],
+    "Food": [
+        "coffee",
+        "tea",
+        "lunch",
+        "dinner",
+        "breakfast",
+        "burger",
+        "pizza",
+        "restaurant",
+        "cafe",
+        "snack",
+        "beer",
+        "meal",
+        "food",
+    ],
+    "Groceries": [
+        "grocery",
+        "groceries",
+        "supermarket",
+        "walmart",
+        "dmart",
+        "vegetables",
+        "fruits",
+        "milk",
+        "bread",
+        "costco",
+    ],
+    "Transport": [
+        "uber",
+        "ola",
+        "lyft",
+        "taxi",
+        "bus",
+        "train",
+        "metro",
+        "subway",
+        "fuel",
+        "petrol",
+        "gas",
+        "diesel",
+        "parking",
+    ],
+    "Shopping": [
+        "amazon",
+        "shoes",
+        "clothes",
+        "shirt",
+        "pants",
+        "dress",
+        "mall",
+        "shopping",
+        "electronics",
+    ],
     "Entertainment": ["movie", "cinema", "netflix", "spotify", "concert", "game", "steam"],
-    "Utilities": ["electricity", "water", "internet", "wifi", "broadband", "rent", "recharge", "phone bill"],
+    "Utilities": [
+        "electricity",
+        "water",
+        "internet",
+        "wifi",
+        "broadband",
+        "rent",
+        "recharge",
+        "phone bill",
+    ],
     "Health": ["doctor", "medicine", "pharmacy", "hospital", "clinic", "dental"],
     "Travel": ["flight", "hotel", "airbnb", "trip", "vacation"],
 }
@@ -30,10 +89,10 @@ class ModelClient:
     Falls back gracefully to intelligent heuristics if the model server is offline or fails.
     """
 
-    def __init__(self, aimodel_url: Optional[str] = None):
+    def __init__(self, aimodel_url: str | None = None):
         self.aimodel_url = (aimodel_url or AIMODEL_URL).rstrip("/")
 
-    async def check_aimodel_health(self) -> Dict[str, Any]:
+    async def check_aimodel_health(self) -> dict[str, Any]:
         url = f"{self.aimodel_url}/health"
         try:
             async with httpx.AsyncClient(timeout=3.0) as client:
@@ -47,15 +106,25 @@ class ModelClient:
     async def select_tool(
         self,
         user_message: str,
-        current_draft: Optional[ExpenseDraft] = None,
-        reference_date: Optional[datetime] = None,
+        current_draft: ExpenseDraft | None = None,
+        reference_date: datetime | None = None,
     ) -> ToolCall:
         ref_date = reference_date or datetime.now()
         cleaned = user_message.strip().lower()
 
         # Direct shortcuts for confirmation / cancel when draft exists
         if current_draft is not None:
-            if cleaned in ["yes", "y", "confirm", "correct", "looks good", "save", "save to db", "proceed", "sure"]:
+            if cleaned in [
+                "yes",
+                "y",
+                "confirm",
+                "correct",
+                "looks good",
+                "save",
+                "save to db",
+                "proceed",
+                "sure",
+            ]:
                 return ToolCall(
                     tool="commit_expense",
                     arguments={
@@ -74,7 +143,9 @@ class ModelClient:
             if tool_call:
                 return tool_call
         except Exception as e:
-            logger.warning("aimodel server call failed (%s). Falling back to heuristic tool selection.", e)
+            logger.warning(
+                "aimodel server call failed (%s). Falling back to heuristic tool selection.", e
+            )
 
         # Fallback to intelligent heuristic tool selector
         return self._heuristic_select_tool(user_message, current_draft, ref_date)
@@ -82,9 +153,9 @@ class ModelClient:
     async def _call_aimodel_server(
         self,
         user_message: str,
-        current_draft: Optional[ExpenseDraft],
+        current_draft: ExpenseDraft | None,
         ref_date: datetime,
-    ) -> Optional[ToolCall]:
+    ) -> ToolCall | None:
         date_str = ref_date.strftime("%Y-%m-%d")
         tools_str = json.dumps(TOOLS_SCHEMA, indent=2)
 
@@ -92,13 +163,15 @@ class ModelClient:
             f"You are an AI expense tracking assistant. Today's date is {date_str}.\n"
             f"You have access to the following tools for function calling:\n{tools_str}\n\n"
             "Given the user message and current draft, select the appropriate tool and output a single JSON object in the form:\n"
-            "{\"tool\": \"<tool_name>\", \"arguments\": {<arguments>}}\n"
+            '{"tool": "<tool_name>", "arguments": {<arguments>}}\n'
             "Only output the JSON object, nothing else."
         )
 
         user_content = user_message
         if current_draft:
-            user_content += f"\n[Active Draft Pending Confirmation: {current_draft.model_dump_json()}]"
+            user_content += (
+                f"\n[Active Draft Pending Confirmation: {current_draft.model_dump_json()}]"
+            )
 
         payload = {
             "messages": [
@@ -128,7 +201,7 @@ class ModelClient:
     def _heuristic_select_tool(
         self,
         text: str,
-        current_draft: Optional[ExpenseDraft],
+        current_draft: ExpenseDraft | None,
         ref_date: datetime,
     ) -> ToolCall:
         lower = text.lower().strip()
@@ -190,12 +263,21 @@ class ModelClient:
 
         # 5. Extract Description
         cleaned = text
-        cleaned = re.sub(r"^(?:i\s+)?(?:spent|paid|bought|got|purchased)\s+", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(
+            r"^(?:i\s+)?(?:spent|paid|bought|got|purchased)\s+", "", cleaned, flags=re.IGNORECASE
+        )
         if amount is not None:
             amt_s = str(int(amount) if amount.is_integer() else amount)
-            cleaned = re.sub(rf"[$€£₹]?\s*{re.escape(amt_s)}(?:\.\d+)?\s*(?:dollars|usd|bucks|rs|rupees|inr)?", "", cleaned, flags=re.IGNORECASE)
+            cleaned = re.sub(
+                rf"[$€£₹]?\s*{re.escape(amt_s)}(?:\.\d+)?\s*(?:dollars|usd|bucks|rs|rupees|inr)?",
+                "",
+                cleaned,
+                flags=re.IGNORECASE,
+            )
             cleaned = re.sub(rf"\bfor\s+{re.escape(amt_s)}\b", "", cleaned, flags=re.IGNORECASE)
-        cleaned = re.sub(r"\b(today|yesterday|tomorrow|\d{4}-\d{2}-\d{2})\b", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(
+            r"\b(today|yesterday|tomorrow|\d{4}-\d{2}-\d{2})\b", "", cleaned, flags=re.IGNORECASE
+        )
         cleaned = re.sub(r"^(?:on|for|at)\s+", "", cleaned.strip(), flags=re.IGNORECASE)
         cleaned = re.sub(r"\s+(?:on|for|at)$", "", cleaned.strip(), flags=re.IGNORECASE)
         description = " ".join(cleaned.split()).strip()

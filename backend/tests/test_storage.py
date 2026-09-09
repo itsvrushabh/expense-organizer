@@ -1,9 +1,8 @@
 import asyncio
 from datetime import date
 
-from models import ExpenseCreate
-
 import storage
+from models import ExpenseCreate
 
 
 def run(coro):
@@ -56,9 +55,14 @@ def test_delete_missing_returns_none():
 def test_update_replaces_fields_keeps_id():
     created = run(storage.add(make_expense()))
 
-    updated = run(storage.update(created.id, make_expense(
-        description="Groceries", amount=45.0, category="Other", date=date(2026, 1, 9)
-    )))
+    updated = run(
+        storage.update(
+            created.id,
+            make_expense(
+                description="Groceries", amount=45.0, category="Other", date=date(2026, 1, 9)
+            ),
+        )
+    )
 
     assert updated is not None
     assert updated.id == created.id

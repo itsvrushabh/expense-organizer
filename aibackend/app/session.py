@@ -1,12 +1,11 @@
 import logging
 import uuid
 from datetime import datetime
-from typing import Optional, Dict, List
 from enum import Enum
 
-from app.schemas import ExpenseDraft, ChatResponse, ToolResult
-from app.tools import execute_tool, tool_commit_expense, tool_cancel_draft
 from app.model_client import ModelClient
+from app.schemas import ChatResponse, ExpenseDraft, ToolResult
+from app.tools import execute_tool, tool_cancel_draft, tool_commit_expense
 
 logger = logging.getLogger("aibackend.session")
 
@@ -22,8 +21,8 @@ class ChatSession:
     def __init__(self, session_id: str):
         self.session_id = session_id
         self.state: SessionState = SessionState.IDLE
-        self.draft: Optional[ExpenseDraft] = None
-        self.history: List[Dict[str, str]] = []
+        self.draft: ExpenseDraft | None = None
+        self.history: list[dict[str, str]] = []
         self.last_activity: datetime = datetime.now()
 
 
@@ -32,11 +31,11 @@ class SessionManager:
     State machine orchestrating user interactions and function calling.
     """
 
-    def __init__(self, model_client: Optional[ModelClient] = None):
-        self.sessions: Dict[str, ChatSession] = {}
+    def __init__(self, model_client: ModelClient | None = None):
+        self.sessions: dict[str, ChatSession] = {}
         self.model_client = model_client or ModelClient()
 
-    def get_or_create_session(self, session_id: Optional[str] = None) -> ChatSession:
+    def get_or_create_session(self, session_id: str | None = None) -> ChatSession:
         sid = session_id or str(uuid.uuid4())
         if sid not in self.sessions:
             self.sessions[sid] = ChatSession(session_id=sid)
@@ -51,8 +50,8 @@ class SessionManager:
     async def handle_message(
         self,
         user_message: str,
-        session_id: Optional[str] = None,
-        reference_date: Optional[datetime] = None,
+        session_id: str | None = None,
+        reference_date: datetime | None = None,
     ) -> ChatResponse:
         session = self.get_or_create_session(session_id)
         session.history.append({"role": "user", "content": user_message})
@@ -102,7 +101,7 @@ class SessionManager:
     async def confirm_draft(
         self,
         session_id: str,
-        reference_date: Optional[datetime] = None,
+        reference_date: datetime | None = None,
     ) -> ChatResponse:
         session = self.get_or_create_session(session_id)
         if not session.draft:

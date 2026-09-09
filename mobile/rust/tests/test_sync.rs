@@ -6,7 +6,9 @@ fn test_enqueue_and_load() {
     let tmp = NamedTempFile::new().unwrap();
     let qm = QueueManager::new(tmp.path());
 
-    let item = qm.enqueue("Groceries", 45.50, "Food", "2026-09-07").unwrap();
+    let item = qm
+        .enqueue("Groceries", 45.50, "Food", "2026-09-07")
+        .unwrap();
     assert_eq!(item.description, "Groceries");
     assert_eq!(item.amount, 45.50);
     assert_eq!(item.category, "Food");

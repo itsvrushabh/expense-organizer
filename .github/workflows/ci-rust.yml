@@ -1,0 +1,37 @@
+name: CI / Rust
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-rust-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Rust format, Clippy, and tests
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: mobile/rust
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            mobile/rust/target
+          key: rust-${{ runner.os }}-${{ hashFiles('mobile/rust/Cargo.lock') }}
+          restore-keys: rust-${{ runner.os }}-
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --all-features -- -D warnings
+      - run: cargo test

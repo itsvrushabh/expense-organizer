@@ -1,9 +1,11 @@
 import logging
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import HOST, PORT, MODEL_PATH, N_GPU_LAYERS
+from app.config import HOST, MODEL_PATH, N_GPU_LAYERS, PORT
+from app.model import ModelServer, get_model_server
 from app.schemas import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -11,7 +13,6 @@ from app.schemas import (
     CompletionResponse,
     HealthResponse,
 )
-from app.model import ModelServer, get_model_server
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("aimodel")
@@ -22,7 +23,9 @@ model_server: ModelServer = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global model_server
-    logger.info("Initializing aimodel server (MODEL_PATH=%s, N_GPU_LAYERS=%s)...", MODEL_PATH, N_GPU_LAYERS)
+    logger.info(
+        "Initializing aimodel server (MODEL_PATH=%s, N_GPU_LAYERS=%s)...", MODEL_PATH, N_GPU_LAYERS
+    )
     model_server = get_model_server()
     yield
     logger.info("Shutting down aimodel server.")
@@ -89,4 +92,5 @@ app = create_app()
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("app.main:app", host=HOST, port=PORT, reload=True)

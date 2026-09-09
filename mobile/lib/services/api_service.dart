@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+
 import '../models/expense.dart';
 import '../models/expense_summary.dart';
 
@@ -11,8 +13,7 @@ class ApiService {
   static const String prefKey = 'expense_organizer_server_url';
   String baseUrl;
 
-  ApiService({String? baseUrl})
-      : baseUrl = baseUrl ?? _defaultBaseUrl;
+  ApiService({String? baseUrl}) : baseUrl = baseUrl ?? _defaultBaseUrl;
 
   static String get _defaultBaseUrl {
     if (!kIsWeb && Platform.isAndroid) {
@@ -87,12 +88,15 @@ class ApiService {
     } catch (e) {
       return {
         'success': false,
-        'message': 'Connection failed: ${e.toString().replaceAll('Exception:', '').trim()}',
+        'message':
+            'Connection failed: ${e.toString().replaceAll('Exception:', '').trim()}',
       };
     }
   }
 
-  Future<bool> checkHealth({Duration timeout = const Duration(milliseconds: 2500)}) async {
+  Future<bool> checkHealth({
+    Duration timeout = const Duration(milliseconds: 2500),
+  }) async {
     try {
       final uri = Uri.parse('$_cleanBaseUrl/');
       final response = await http.get(uri).timeout(timeout);
@@ -129,10 +133,15 @@ class ApiService {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return ExpenseSummary.fromJson(json);
     }
-    throw HttpException('Failed to load week expenses (${response.statusCode})');
+    throw HttpException(
+      'Failed to load week expenses (${response.statusCode})',
+    );
   }
 
-  Future<ExpenseSummary> fetchWeekByDateExpenses(String dateStr, {bool startSunday = true}) async {
+  Future<ExpenseSummary> fetchWeekByDateExpenses(
+    String dateStr, {
+    bool startSunday = true,
+  }) async {
     final query = startSunday ? '?start_sunday=true' : '';
     final uri = Uri.parse('$_cleanBaseUrl/expenses/week/date/$dateStr$query');
     final response = await http.get(uri).timeout(const Duration(seconds: 5));
@@ -140,7 +149,9 @@ class ApiService {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return ExpenseSummary.fromJson(json);
     }
-    throw HttpException('Failed to load week expenses (${response.statusCode})');
+    throw HttpException(
+      'Failed to load week expenses (${response.statusCode})',
+    );
   }
 
   Future<ExpenseSummary> fetchMonthExpenses(int year, int month) async {
@@ -150,7 +161,9 @@ class ApiService {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return ExpenseSummary.fromJson(json);
     }
-    throw HttpException('Failed to load month expenses (${response.statusCode})');
+    throw HttpException(
+      'Failed to load month expenses (${response.statusCode})',
+    );
   }
 
   Future<ExpenseSummary> fetchYearExpenses(int year) async {
@@ -160,7 +173,9 @@ class ApiService {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return ExpenseSummary.fromJson(json);
     }
-    throw HttpException('Failed to load year expenses (${response.statusCode})');
+    throw HttpException(
+      'Failed to load year expenses (${response.statusCode})',
+    );
   }
 
   Future<Expense> createExpense({
@@ -176,17 +191,21 @@ class ApiService {
       'category': category,
       'date': date,
     };
-    final response = await http.post(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(payload),
-    ).timeout(const Duration(seconds: 8));
+    final response = await http
+        .post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 8));
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return Expense.fromJson(json);
     }
-    throw HttpException('Failed to create expense: HTTP ${response.statusCode} - ${response.body}');
+    throw HttpException(
+      'Failed to create expense: HTTP ${response.statusCode} - ${response.body}',
+    );
   }
 
   Future<Expense> updateExpense(
@@ -203,24 +222,30 @@ class ApiService {
       'category': category,
       'date': date,
     };
-    final response = await http.put(
-      uri,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(payload),
-    ).timeout(const Duration(seconds: 8));
+    final response = await http
+        .put(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 8));
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return Expense.fromJson(json);
     }
-    throw HttpException('Failed to update expense: HTTP ${response.statusCode}');
+    throw HttpException(
+      'Failed to update expense: HTTP ${response.statusCode}',
+    );
   }
 
   Future<void> deleteExpense(int id) async {
     final uri = Uri.parse('$_cleanBaseUrl/expenses/$id');
     final response = await http.delete(uri).timeout(const Duration(seconds: 8));
     if (response.statusCode != 200) {
-      throw HttpException('Failed to delete expense: HTTP ${response.statusCode}');
+      throw HttpException(
+        'Failed to delete expense: HTTP ${response.statusCode}',
+      );
     }
   }
 }

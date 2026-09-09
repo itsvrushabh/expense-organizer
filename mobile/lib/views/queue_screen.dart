@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../services/sync_service.dart';
 import '../utils/currency.dart';
 import 'server_settings_dialog.dart';
@@ -69,20 +70,29 @@ class _QueueScreenState extends State<QueueScreen> {
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: pendingCount > 0 ? Colors.amber.shade900 : Colors.green.shade800,
+                                color: pendingCount > 0
+                                    ? Colors.amber.shade900
+                                    : Colors.green.shade800,
                               ),
                             ),
                             Text(
-                              sync.isOnline ? 'Server is online' : 'Server is offline (queuing)',
+                              sync.isOnline
+                                  ? 'Server is online'
+                                  : 'Server is offline (queuing)',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: sync.isOnline ? Colors.green.shade700 : Colors.deepOrange.shade700,
+                                color: sync.isOnline
+                                    ? Colors.green.shade700
+                                    : Colors.deepOrange.shade700,
                               ),
                             ),
                           ],
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: sync.rustBridge.isNativeAvailable
                                 ? Colors.deepPurple.shade50
@@ -95,7 +105,9 @@ class _QueueScreenState extends State<QueueScreen> {
                             ),
                           ),
                           child: Text(
-                            sync.rustBridge.isNativeAvailable ? '⚡ Rust Engine' : 'Dart Engine',
+                            sync.rustBridge.isNativeAvailable
+                                ? '⚡ Rust Engine'
+                                : 'Dart Engine',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -112,22 +124,31 @@ class _QueueScreenState extends State<QueueScreen> {
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: sync.isOnline && !sync.isSyncing && pendingCount > 0
+                            onPressed:
+                                sync.isOnline &&
+                                    !sync.isSyncing &&
+                                    pendingCount > 0
                                 ? () => sync.syncPending()
                                 : null,
                             icon: sync.isSyncing
                                 ? const SizedBox(
                                     width: 16,
                                     height: 16,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : const Icon(Icons.sync, size: 18),
-                            label: Text(sync.isSyncing ? 'Syncing...' : 'Sync Now'),
+                            label: Text(
+                              sync.isSyncing ? 'Syncing...' : 'Sync Now',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         OutlinedButton(
-                          onPressed: items.any((i) => i.isSynced) ? () => sync.clearSynced() : null,
+                          onPressed: items.any((i) => i.isSynced)
+                              ? () => sync.clearSynced()
+                              : null,
                           child: const Text('Clear Synced'),
                         ),
                       ],
@@ -150,11 +171,18 @@ class _QueueScreenState extends State<QueueScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.inbox_outlined, size: 48, color: Colors.grey),
+                            Icon(
+                              Icons.inbox_outlined,
+                              size: 48,
+                              color: Colors.grey,
+                            ),
                             SizedBox(height: 8),
                             Text(
                               'Offline queue is empty',
-                              style: TextStyle(color: Colors.grey, fontSize: 16),
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                              ),
                             ),
                           ],
                         ),
@@ -165,19 +193,28 @@ class _QueueScreenState extends State<QueueScreen> {
                           // Show newest first
                           final item = items[items.length - 1 - index];
                           return Card(
-                            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
                             child: ListTile(
                               leading: Icon(
                                 item.isSynced
                                     ? Icons.check_circle
-                                    : (item.isFailed ? Icons.error : Icons.schedule),
+                                    : (item.isFailed
+                                          ? Icons.error
+                                          : Icons.schedule),
                                 color: item.isSynced
                                     ? Colors.green
-                                    : (item.isFailed ? Colors.red : Colors.amber.shade800),
+                                    : (item.isFailed
+                                          ? Colors.red
+                                          : Colors.amber.shade800),
                               ),
                               title: Text(
                                 item.description,
-                                style: const TextStyle(fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -186,7 +223,10 @@ class _QueueScreenState extends State<QueueScreen> {
                                   if (item.lastError != null)
                                     Text(
                                       'Error: ${item.lastError}',
-                                      style: const TextStyle(color: Colors.red, fontSize: 11),
+                                      style: const TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 11,
+                                      ),
                                     ),
                                 ],
                               ),
@@ -208,7 +248,9 @@ class _QueueScreenState extends State<QueueScreen> {
                                       fontWeight: FontWeight.bold,
                                       color: item.isSynced
                                           ? Colors.green
-                                          : (item.isFailed ? Colors.red : Colors.amber.shade800),
+                                          : (item.isFailed
+                                                ? Colors.red
+                                                : Colors.amber.shade800),
                                     ),
                                   ),
                                 ],
