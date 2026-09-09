@@ -9,7 +9,7 @@ COPY package.json bun.lock* ./
 RUN bun install
 
 # Copy application files
-# COPY . .
+COPY . .
 
 # Expose port
 EXPOSE 3000

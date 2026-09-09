@@ -1,0 +1,129 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/${{ github.repository_owner }}/expense-organizer
+
+jobs:
+  android:
+    name: Android release (${{ matrix.app }})
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: organizer
+            directory: mobile
+            artifact: organizer-android
+          - app: helper
+            directory: expense-helper/mobile
+            artifact: helper-android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build release APK
+        working-directory: ${{ matrix.directory }}
+        run: |
+          flutter pub get
+          flutter build apk --release
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.directory }}/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
+
+  ios:
+    name: iOS release (${{ matrix.app }})
+    runs-on: macos-14
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: organizer
+            directory: mobile
+            artifact: organizer-ios
+          - app: helper
+            directory: expense-helper/mobile
+            artifact: helper-ios
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Build unsigned IPA
+        working-directory: ${{ matrix.directory }}
+        run: |
+          flutter pub get
+          flutter build ipa --release --no-codesign
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.directory }}/build/ios/ipa/*.ipa
+          retention-days: 7
+
+  docker:
+    name: Publish Docker images
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: backend
+            context: backend
+          - service: frontend
+            context: frontend
+          - service: aibackend
+            context: aibackend
+          - service: aimodel
+            context: aimodel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:latest
+
+  github-release:
+    name: Attach mobile artifacts to GitHub release
+    if: github.ref_type == 'tag'
+    needs:
+      - android
+      - ios
+      - docker
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release-artifacts/**/*
+          generate_release_notes: true
