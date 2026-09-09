@@ -22,20 +22,27 @@ jobs:
         include:
           - service: backend
             python: "3.13"
-            requirements: "requirements.txt requirements-dev.txt"
+            requirements: |
+              -r requirements.txt
+              -r requirements-dev.txt
+            cache: |
+              backend/requirements.txt
+              backend/requirements-dev.txt
           - service: aibackend
             python: "3.11"
             requirements: "requirements.txt"
+            cache: aibackend/requirements.txt
           - service: aimodel
             python: "3.11"
             requirements: "requirements.txt"
+            cache: aimodel/requirements.txt
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           cache: pip
-          cache-dependency-path: ${{ matrix.service }}/requirements.txt
+          cache-dependency-path: ${{ matrix.cache }}
       - name: Install dependencies
         working-directory: ${{ matrix.service }}
         run: |

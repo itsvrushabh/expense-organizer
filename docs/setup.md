@@ -129,18 +129,22 @@ applications, the Rust engine, Docker configuration, and lightweight service pro
 branch-protection check. Require the displayed `CI / Success / ci-success` check in the
 repository branch rules.
 
-The same workflow runs lightweight backend/frontend Docker startup probes. The full model
-health check is reserved for release or manually triggered runs because it requires the
-GGUF model artifact and is not suitable for every commit.
+`ci-services.yml` runs lightweight backend/frontend Docker startup probes. The full model
+health check is not part of every commit because it requires the GGUF model artifact and
+is not suitable for standard GitHub-hosted runners.
 
 Version tags matching `vMAJOR.MINOR.PATCH` trigger `.github/workflows/release.yml`. The
-release workflow builds Android APKs and unsigned iOS IPAs for both mobile applications,
-publishes the four service images to GitHub Container Registry, and attaches the mobile
-artifacts to the GitHub release. Temporary mobile artifacts are retained for seven days;
-release attachments are retained by GitHub Releases.
+release workflow builds preview Android APKs and unsigned iOS IPAs for both mobile
+applications, publishes immutable version-tagged service images to GitHub Container
+Registry, and attaches the mobile artifacts to the GitHub release. Temporary mobile
+artifacts are retained for seven days; release attachments are retained by GitHub Releases.
+The `aimodel` image requires the GGUF model to be mounted separately at `/app/models`.
+Manual release runs are validation-only and do not publish images or create releases.
+Only valid `vMAJOR.MINOR.PATCH` tags publish.
 
 Release publishing requires the workflow's `GITHUB_TOKEN` package and release permissions.
-Signed iOS builds require Apple signing secrets and can be added without changing the
-ordinary CI workflow. Dependabot opens weekly dependency pull requests for Python, Bun/npm,
-Cargo, Flutter/Dart, Docker, and GitHub Actions; patch/minor updates are grouped while
-major upgrades remain separate.
+Android currently uses the repository's preview signing configuration; production Android
+distribution requires signing secrets. Signed iOS builds require Apple signing secrets and
+reviewed native platform projects. Dependabot opens weekly dependency pull requests for
+Python, Bun/npm, Cargo, Flutter/Dart, Docker, and GitHub Actions; patch/minor updates are
+grouped while major upgrades remain separate.

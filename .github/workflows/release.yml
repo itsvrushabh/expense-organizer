@@ -7,8 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 concurrency:
   group: release-${{ github.ref }}
@@ -21,7 +20,7 @@ env:
 jobs:
   validate-tag:
     name: Validate release tag
-    if: always()
+    if: github.ref_type == 'tag' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     steps:
       - name: Require semantic version tag
@@ -30,10 +29,14 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           [[ "${TAG}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+      - name: Allow manual validation run
+        if: github.event_name == 'workflow_dispatch'
+        run: echo "Manual release validation does not publish images or create a GitHub release."
 
   android:
     name: Android release (${{ matrix.app }})
     needs: validate-tag
+    if: needs.validate-tag.result == 'success'
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -56,17 +59,25 @@ jobs:
         run: |
           if [[ ! -d android ]]; then flutter create --platforms=android .; fi
           flutter pub get
-          flutter build apk --release
+          if [[ "${GITHUB_REF_TYPE}" == tag ]]; then
+            version_name="${GITHUB_REF_NAME#v}"
+          else
+            version_name="0.0.0"
+          fi
+          flutter build apk --release \
+            --build-name "${version_name}" \
+            --build-number "${GITHUB_RUN_NUMBER}"
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ matrix.artifact }}-${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}-preview
           path: ${{ matrix.directory }}/build/app/outputs/flutter-apk/app-release.apk
           retention-days: 7
 
   ios:
     name: iOS release (${{ matrix.app }})
     needs: validate-tag
+    if: needs.validate-tag.result == 'success'
     runs-on: macos-14
     strategy:
       fail-fast: false
@@ -89,17 +100,28 @@ jobs:
         run: |
           if [[ ! -d ios ]]; then flutter create --platforms=ios .; fi
           flutter pub get
-          flutter build ipa --release --no-codesign
+          if [[ "${GITHUB_REF_TYPE}" == tag ]]; then
+            version_name="${GITHUB_REF_NAME#v}"
+          else
+            version_name="0.0.0-preview"
+          fi
+          flutter build ipa --release --no-codesign \
+            --build-name "${version_name}" \
+            --build-number "${GITHUB_RUN_NUMBER}"
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.artifact }}
+          name: ${{ matrix.artifact }}-${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}-unsigned-preview
           path: ${{ matrix.directory }}/build/ios/ipa/*.ipa
           retention-days: 7
 
   docker:
     name: Publish Docker images
     needs: validate-tag
+    if: github.ref_type == 'tag' && needs.validate-tag.result == 'success'
+    permissions:
+      contents: read
+      packages: write
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -125,8 +147,7 @@ jobs:
           context: ${{ matrix.context }}
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}
-            ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:latest
+            ${{ env.IMAGE_PREFIX }}-${{ matrix.service }}:${{ github.ref_name }}
 
   github-release:
     name: Attach mobile artifacts to GitHub release
@@ -137,6 +158,9 @@ jobs:
       - ios
       - docker
     runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
         with:

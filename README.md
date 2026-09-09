@@ -190,10 +190,17 @@ git tag v1.2.3
 git push origin v1.2.3
 ```
 
-The release workflow builds APK and unsigned IPA artifacts for both mobile applications,
-publishes the four service images to GitHub Container Registry, and attaches the mobile
-files to the GitHub Release. Temporary workflow artifacts are retained for seven days.
-Signed iOS builds require Apple signing credentials and are not required for ordinary CI.
+The release workflow builds preview APK and unsigned IPA artifacts for both mobile
+applications, publishes immutable version-tagged service images to GitHub Container
+Registry, and attaches the mobile files to the GitHub Release. Temporary workflow
+artifacts are retained for seven days. Android signing currently uses the repository's
+existing preview configuration; production distribution requires signing secrets and
+reviewed native platform projects. The `aimodel` image requires the GGUF model to be
+mounted separately at `/app/models`.
+
+Manual Release workflow runs are validation-only: they may build preview mobile artifacts
+but do not publish Docker images or create GitHub Releases. Only a valid `vMAJOR.MINOR.PATCH`
+tag can publish.
 
 Workflow permissions are explicit: CI has read-only repository access, while the release
 workflow alone has `contents: write` and `packages: write` for GitHub Releases and GHCR.
@@ -204,8 +211,13 @@ Do not expose release secrets to pull requests from forks.
 Use the Actions tab to inspect a run, or use the GitHub CLI:
 
 ```bash
-gh run list --workflow CI
+gh run list --workflow "CI / Success"
 gh run view RUN_ID --log-failed
+gh run list --workflow "CI / Python"
+gh run list --workflow "CI / Frontend"
+gh run list --workflow "CI / Flutter"
+gh run list --workflow "CI / Rust"
+gh run list --workflow "CI / Services"
 gh run list --workflow Release
 gh run watch RUN_ID
 ```
