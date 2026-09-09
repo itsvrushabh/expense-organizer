@@ -137,10 +137,22 @@ class ModelClient:
             if cleaned in ["no", "cancel", "discard", "wrong", "stop", "abort"]:
                 return ToolCall(tool="cancel_draft", arguments={})
 
+        # Fast path: deterministic detection for summary queries and exchange rates
+        if current_draft is None:
+            fast_tool = self._detect_query_or_rate_tool(user_message, ref_date)
+            if fast_tool:
+                return fast_tool
+
         # Try calling the dedicated aimodel server
         try:
             tool_call = await self._call_aimodel_server(user_message, current_draft, ref_date)
             if tool_call:
+                # If the model server mistakenly asked for clarification when all fields are present,
+                # check if heuristic tool selector can construct a valid draft_expense
+                if tool_call.tool == "ask_clarification":
+                    h_call = self._heuristic_select_tool(user_message, current_draft, ref_date)
+                    if h_call.tool == "draft_expense":
+                        return h_call
                 return tool_call
         except Exception as e:
             logger.warning(
@@ -198,6 +210,156 @@ class ModelClient:
                     return ToolCall(tool=t_name, arguments=args)
         return None
 
+    def _detect_query_or_rate_tool(self, text: str, ref_date: datetime) -> ToolCall | None:
+        lower = text.lower().strip()
+
+        # 1. Check live exchange rate inquiries
+        if any(
+            kw in lower
+            for kw in [
+                "exchange rate",
+                "exchange rates",
+                "currency rates",
+                "currency rate",
+                "refresh rate",
+                "refresh rates",
+                "live rate",
+                "live rates",
+                "refresh currencies",
+                "refresh exchange",
+            ]
+        ):
+            return ToolCall(tool="refresh_exchange_rates", arguments={})
+
+        # 2. Check expense summary / query inquiries
+        summary_triggers = [
+            "how much did i spend",
+            "how much have i spent",
+            "how much spent",
+            "what did i spend",
+            "what are my expenses",
+            "what are my total expenses",
+            "show my expenses",
+            "show expenses",
+            "list expenses",
+            "get expenses",
+            "summary of expenses",
+            "expense summary",
+            "total expenses",
+            "total spent",
+            "spending summary",
+            "how much i spent",
+            "breakdown of expenses",
+        ]
+        is_summary_query = any(trigger in lower for trigger in summary_triggers)
+        if (
+            not is_summary_query
+            and (lower.startswith("how much") or lower.startswith("what is my total"))
+            and not re.search(r"\b(?:cost|spent|paid)\s+[$€£₹]?\d", lower)
+        ):
+            is_summary_query = True
+
+        if is_summary_query:
+            month_map = {
+                "january": 1,
+                "jan": 1,
+                "february": 2,
+                "feb": 2,
+                "march": 3,
+                "mar": 3,
+                "april": 4,
+                "apr": 4,
+                "may": 5,
+                "june": 6,
+                "jun": 6,
+                "july": 7,
+                "jul": 7,
+                "august": 8,
+                "aug": 8,
+                "september": 9,
+                "sep": 9,
+                "sept": 9,
+                "october": 10,
+                "oct": 10,
+                "november": 11,
+                "nov": 11,
+                "december": 12,
+                "dec": 12,
+            }
+            detected_month = None
+            for m_name, m_num in month_map.items():
+                if re.search(rf"\b{m_name}\b", lower):
+                    detected_month = m_num
+                    break
+
+            detected_year = None
+            ym = re.search(r"\b(20\d{2})\b", lower)
+            if ym:
+                detected_year = int(ym.group(1))
+            elif detected_month is not None:
+                detected_year = ref_date.year
+
+            detected_rel = None
+            if "today" in lower:
+                detected_rel = "today"
+            elif "yesterday" in lower:
+                detected_rel = "yesterday"
+            elif "this week" in lower:
+                detected_rel = "this_week"
+            elif "last week" in lower:
+                detected_rel = "last_week"
+            elif "this month" in lower:
+                detected_rel = "this_month"
+            elif "last month" in lower:
+                detected_rel = "last_month"
+            elif "this year" in lower:
+                detected_rel = "this_year"
+            elif "last year" in lower:
+                detected_rel = "last_year"
+
+            detected_curr = "USD"
+            if any(c in lower for c in ["inr", "rupee", "rupees", "₹", "rs"]):
+                detected_curr = "INR"
+            elif any(c in lower for c in ["eur", "euro", "euros", "€"]):
+                detected_curr = "EUR"
+            elif any(c in lower for c in ["jpy", "yen", "¥"]):
+                detected_curr = "JPY"
+            elif any(c in lower for c in ["gbp", "pound", "pounds", "£"]):
+                detected_curr = "GBP"
+            elif any(c in lower for c in ["cny", "yuan", "rmb"]):
+                detected_curr = "CNY"
+
+            detected_cats = []
+            known_cats = [
+                "Food",
+                "Groceries",
+                "Transport",
+                "Shopping",
+                "Entertainment",
+                "Utilities",
+                "Health",
+                "Travel",
+                "Online",
+                "Other",
+            ]
+            for c in known_cats:
+                if re.search(rf"\b{c.lower()}\b", lower):
+                    detected_cats.append(c)
+
+            query_args: dict[str, Any] = {"currency": detected_curr}
+            if detected_year:
+                query_args["year"] = detected_year
+            if detected_month:
+                query_args["month"] = detected_month
+            if detected_rel:
+                query_args["relative_period"] = detected_rel
+            if detected_cats:
+                query_args["categories"] = detected_cats
+
+            return ToolCall(tool="query_expense_summary", arguments=query_args)
+
+        return None
+
     def _heuristic_select_tool(
         self,
         text: str,
@@ -221,7 +383,12 @@ class ModelClient:
                     arguments={"field": field, "value": val},
                 )
 
-        # 2. Extract Amount
+        # 2. Check live exchange rates or expense summary inquiries
+        detected_tool = self._detect_query_or_rate_tool(text, ref_date)
+        if detected_tool:
+            return detected_tool
+
+        # 3. Extract Amount
         amount = None
         patterns = [
             r"[$€£₹]\s*(\d+(?:\.\d+)?)",

@@ -3,13 +3,12 @@ Smoke tests for the AI Chat Assistant Backend.
 Verifies critical paths, API routes, and agent session initialization.
 """
 
-from fastapi.testclient import TestClient
+import app.main as main_module
 import pytest
-
 from app.main import create_app
 from app.model_client import ModelClient
 from app.session import SessionManager
-import app.main as main_module
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture

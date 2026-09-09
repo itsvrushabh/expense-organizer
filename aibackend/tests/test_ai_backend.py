@@ -9,14 +9,11 @@ from app.session import SessionManager
 from app.tools import (
     TOOLS_SCHEMA,
     ExpenseDraft,
+    ToolCall,
+    execute_tool,
     tool_commit_expense,
     tool_draft_expense,
     tool_update_draft_field,
-    tool_ask_clarification,
-    tool_cancel_draft,
-    execute_tool,
-    ExpenseDraft,
-    ToolCall,
 )
 from fastapi.testclient import TestClient
 
@@ -40,6 +37,8 @@ def test_tools_schema():
     assert "commit_expense" in tool_names
     assert "ask_clarification" in tool_names
     assert "cancel_draft" in tool_names
+    assert "refresh_exchange_rates" in tool_names
+    assert "query_expense_summary" in tool_names
 
 
 def test_tool_draft_expense():
@@ -145,3 +144,94 @@ async def test_refresh_exchange_rates_tool(mock_refresh):
     assert "Successfully refreshed live currency exchange rates" in res.message
     assert "INR" in res.message
     assert "94.8400" in res.message
+
+
+@pytest.mark.anyio
+@patch("app.tools.fetch_expense_summary", new_callable=AsyncMock)
+async def test_query_expense_summary_tool(mock_summary):
+    mock_summary.return_value = {
+        "total": 3556.62,
+        "count": 2,
+        "currency": "INR",
+        "currency_symbol": "₹",
+        "expenses": [
+            {
+                "description": "Web Hosting",
+                "amount": 1556.62,
+                "category": "Online",
+                "date": "2026-02-10",
+            },
+            {
+                "description": "Domain Name",
+                "amount": 2000.0,
+                "category": "Online",
+                "date": "2026-02-12",
+            },
+        ],
+    }
+
+    res = await execute_tool(
+        ToolCall(
+            tool="query_expense_summary",
+            arguments={
+                "year": 2026,
+                "month": 2,
+                "categories": ["Online"],
+                "currency": "INR",
+            },
+        )
+    )
+    assert res.status == "idle"
+    assert "₹3,556.62 INR" in res.message
+    assert "**Transactions**: 2" in res.message
+    assert "Web Hosting" in res.message
+    assert "Domain Name" in res.message
+
+
+@pytest.mark.anyio
+async def test_model_client_detects_summary_queries():
+    m_client = ModelClient(aimodel_url="http://nonexistent:8002")
+
+    call1 = await m_client.select_tool("How much did I spend on Online expenses in February?")
+    assert call1.tool == "query_expense_summary"
+    assert call1.arguments.get("month") == 2
+    assert "Online" in call1.arguments.get("categories", [])
+
+    call2 = await m_client.select_tool("What are my total expenses this month in INR?")
+    assert call2.tool == "query_expense_summary"
+    assert call2.arguments.get("relative_period") == "this_month"
+    assert call2.arguments.get("currency") == "INR"
+
+    call3 = await m_client.select_tool("Show live exchange rates")
+    assert call3.tool == "refresh_exchange_rates"
+
+
+@patch("app.tools.fetch_expense_summary", new_callable=AsyncMock)
+def test_chat_message_summary_flow(mock_summary, client):
+    mock_summary.return_value = {
+        "total": 120.50,
+        "count": 1,
+        "currency": "USD",
+        "currency_symbol": "$",
+        "expenses": [
+            {
+                "description": "AWS Cloud",
+                "amount": 120.50,
+                "category": "Online",
+                "date": "2026-02-14",
+            }
+        ],
+    }
+
+    res = client.post(
+        "/api/chat/message",
+        json={
+            "message": "How much did I spend on Online expenses in February?",
+            "session_id": "test-query-summary-flow",
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "idle"
+    assert "Expense Summary" in data["message"]
+    assert "AWS Cloud" in data["message"]

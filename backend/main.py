@@ -1,11 +1,12 @@
 import asyncio
-from contextlib import asynccontextmanager
 import logging
+from contextlib import asynccontextmanager
+
+import storage
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import categories, currencies, expenses
 from services.currency_service import start_currency_sync_worker
-import storage
 
 logger = logging.getLogger("expense_backend.main")
 

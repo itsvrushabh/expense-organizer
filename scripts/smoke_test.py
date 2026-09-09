@@ -10,10 +10,9 @@ Defaults:
   AIBACKEND_URL = http://localhost:18001
 """
 
+import json
 import sys
 import urllib.request
-import json
-import time
 
 FRONTEND_URL = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:13000"
 AIBACKEND_URL = sys.argv[2] if len(sys.argv) > 2 else "http://localhost:18001"
@@ -66,7 +65,13 @@ def main():
     try:
         status, data = http_get(f"{FRONTEND_URL}/api/categories")
         ok = status == 200 and isinstance(data, list) and len(data) >= 12
-        checks.append(("GET /api/categories", ok, f"Categories count: {len(data) if isinstance(data, list) else 0}"))
+        checks.append(
+            (
+                "GET /api/categories",
+                ok,
+                f"Categories count: {len(data) if isinstance(data, list) else 0}",
+            )
+        )
     except Exception as e:
         checks.append(("GET /api/categories", False, str(e)))
 
@@ -74,7 +79,13 @@ def main():
     try:
         status, data = http_get(f"{FRONTEND_URL}/api/expenses/summary?year=2026")
         ok = status == 200 and "total" in data and "count" in data
-        checks.append(("GET /api/expenses/summary", ok, f"total: {data.get('total')}, count: {data.get('count')}"))
+        checks.append(
+            (
+                "GET /api/expenses/summary",
+                ok,
+                f"total: {data.get('total')}, count: {data.get('count')}",
+            )
+        )
     except Exception as e:
         checks.append(("GET /api/expenses/summary", False, str(e)))
 
@@ -90,7 +101,13 @@ def main():
     try:
         status, data = http_post(f"{FRONTEND_URL}/api/currencies/refresh", {})
         ok = status == 200 and isinstance(data, list)
-        checks.append(("POST /api/currencies/refresh", ok, f"Refreshed {len(data) if isinstance(data, list) else 0} rates"))
+        checks.append(
+            (
+                "POST /api/currencies/refresh",
+                ok,
+                f"Refreshed {len(data) if isinstance(data, list) else 0} rates",
+            )
+        )
     except Exception as e:
         checks.append(("POST /api/currencies/refresh", False, str(e)))
 
