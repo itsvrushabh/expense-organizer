@@ -13,6 +13,9 @@ All in-depth component and setup documentation is organized in the [`docs/`](doc
 - 💻 **[Web Frontend Guide](docs/frontend.md)**: Bun + React 19 + TypeScript, Excel pivot table views, spend heatmaps, and `/api` proxy.
 - 📱 **[Mobile App & Rust Engine Guide](docs/mobile.md)**: Flutter client, Material 3 gradient UI, C-FFI Rust sync engine, offline queue, and build guides.
 - 📚 **[REST API Reference](docs/api.md)**: Complete endpoint catalog, query parameters, JSON schemas, and curl examples.
+- 🤖 **[AI Backend Guide](docs/aibackend.md)**: Containerized GGUF LLM service, conversational state machine, and auto-DB ingestion.
+- 💬 **[Expense Helper Mobile Guide](docs/expense-helper-mobile.md)**: Multiplatform Flutter chat client (Android & iOS) with interactive draft cards.
+- 🖥️ **[Desktop Helper Roadmap (On Hold)](docs/expense-helper-desktop.md)**: Architecture and specification for planned Rust `iced` desktop client (Linux & Windows).
 
 ---
 

@@ -30,6 +30,25 @@ services:
     networks:
       - expense-network
 
+  aibackend:
+    build:
+      context: ./aibackend
+      dockerfile: Dockerfile
+    container_name: expense-aibackend
+    volumes:
+      - ./aibackend/models:/app/models:ro
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MODEL_PATH=/app/models/qwen2.5-0.5b-instruct-q4_k_m.gguf
+      - EXPENSE_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - expense-network
+
 networks:
   expense-network:
     driver: bridge
