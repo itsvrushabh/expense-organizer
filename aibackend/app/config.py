@@ -22,5 +22,6 @@ STANDARD_CATEGORIES = [
     "Travel",
     "Education",
     "Personal",
+    "Online",
     "Other",
 ]

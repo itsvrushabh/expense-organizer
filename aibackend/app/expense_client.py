@@ -80,3 +80,36 @@ async def check_backend_health() -> Dict[str, Any]:
             return {"status": "unreachable", "status_code": resp.status_code}
     except Exception as e:
         return {"status": "unreachable", "error": str(e)}
+
+
+async def refresh_exchange_rates_in_backend() -> Optional[list[dict]]:
+    """
+    Calls backend POST /currencies/refresh to fetch live exchange rates.
+    """
+    url = f"{EXPENSE_API_URL}/currencies/refresh"
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(url)
+            if resp.status_code in [200, 201]:
+                return resp.json()
+            logger.error("Failed to refresh currencies in backend: status %s, body %s", resp.status_code, resp.text)
+            return None
+    except Exception as e:
+        logger.error("Error refreshing currency rates via backend: %s", e)
+        return None
+
+
+async def get_currencies_from_backend() -> Optional[list[dict]]:
+    """
+    Calls backend GET /currencies.
+    """
+    url = f"{EXPENSE_API_URL}/currencies"
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(url)
+            if resp.status_code == 200:
+                return resp.json()
+            return None
+    except Exception as e:
+        logger.error("Error fetching currencies from backend: %s", e)
+        return None

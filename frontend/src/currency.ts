@@ -1,12 +1,29 @@
-export type Currency = 'USD' | 'INR' | 'CNY'
+export type Currency = 'USD' | 'INR' | 'EUR' | 'JPY' | 'GBP' | 'CNY'
 
-export const RATES: Record<Currency, number> = { USD: 1, INR: 84, CNY: 7.2 }
+export const RATES: Record<Currency, number> = {
+  USD: 1,
+  INR: 84,
+  EUR: 0.92,
+  JPY: 150,
+  GBP: 0.78,
+  CNY: 7.2,
+}
 
-export const SYMBOLS: Record<Currency, string> = { USD: '$', INR: '₹', CNY: '¥' }
+export const SYMBOLS: Record<Currency, string> = {
+  USD: '$',
+  INR: '₹',
+  EUR: '€',
+  JPY: '¥',
+  GBP: '£',
+  CNY: '¥',
+}
 
 export const CURRENCIES: { code: Currency; label: string }[] = [
   { code: 'USD', label: 'USD ($)' },
   { code: 'INR', label: 'INR (₹)' },
+  { code: 'EUR', label: 'EUR (€)' },
+  { code: 'JPY', label: 'JPY (¥)' },
+  { code: 'GBP', label: 'GBP (£)' },
   { code: 'CNY', label: 'CNY (¥)' },
 ]
 

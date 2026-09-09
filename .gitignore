@@ -4,6 +4,7 @@ __pycache__/
 
 # Local data
 data/
+postgres_data/
 
 # Node / frontend
 node_modules/

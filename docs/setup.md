@@ -30,7 +30,8 @@ docker-compose down
 
 > [!NOTE]
 > **Zero Unnecessary Port Exposure**:
-> - Both `backend` (internal port `8000`) and `aimodel` (internal port `8002`) operate strictly on the internal Docker bridge network (`expense-network`) with **zero host port bindings**.
+> - `backend` (internal port `8000`), `aimodel` (internal port `8002`), and `db` (PostgreSQL internal port `5432`) operate strictly on the internal Docker bridge network (`expense-network`) with **zero host port bindings**.
+> - PostgreSQL database files are persisted on the host machine at `./postgres_data` outside the container and are consumed exclusively by `backend`.
 > - Clients and mobile apps communicate through the frontend reverse proxy (`http://localhost:13000/api`) or interact with the AI assistant at `http://localhost:18001`.
 
 ---
@@ -93,6 +94,13 @@ flutter run
 
 ### Backend
 - `PORT` - Port to bind the Uvicorn server (default: `8000`)
+- `DATABASE_URL` - PostgreSQL connection string (default in Docker: `postgresql://postgres:postgres@db:5432/expenses`). If unset, falls back to in-memory storage for lightweight testing.
+
+### PostgreSQL Database (`db`)
+- `POSTGRES_USER` - Database username (default: `postgres`)
+- `POSTGRES_PASSWORD` - Database password (default: `postgres`)
+- `POSTGRES_DB` - Database name (default: `expenses`)
+- Host storage mount: `./postgres_data:/var/lib/postgresql/data`
 
 ### Frontend
 - `PORT` - Internal port to bind the Bun server (default: `3000`, published as `13000:3000`)
@@ -112,6 +120,7 @@ docker-compose logs -f
 
 # View specific service logs
 docker-compose logs -f backend
+docker-compose logs -f db
 docker-compose logs -f frontend
 docker-compose logs -f aibackend
 docker-compose logs -f aimodel
