@@ -31,11 +31,7 @@ void main() {
     });
 
     test('ExpenseSummary handles empty and null lists safely', () {
-      final emptyJson = {
-        'total': 0.0,
-        'count': 0,
-        'expenses': null,
-      };
+      final emptyJson = {'total': 0.0, 'count': 0, 'expenses': null};
 
       final summary = ExpenseSummary.fromJson(emptyJson);
       expect(summary.total, 0.0);
@@ -71,9 +67,18 @@ void main() {
     });
 
     test('ApiService sanitizes various malformed server URLs', () {
-      expect(ApiService.sanitizeUrl('   localhost:13000   '), 'http://localhost:13000');
-      expect(ApiService.sanitizeUrl('http://myserver.com:8000////'), 'http://myserver.com:8000');
-      expect(ApiService.sanitizeUrl('https://secure.api.org/api/'), 'https://secure.api.org/api');
+      expect(
+        ApiService.sanitizeUrl('   localhost:13000   '),
+        'http://localhost:13000',
+      );
+      expect(
+        ApiService.sanitizeUrl('http://myserver.com:8000////'),
+        'http://myserver.com:8000',
+      );
+      expect(
+        ApiService.sanitizeUrl('https://secure.api.org/api/'),
+        'https://secure.api.org/api',
+      );
     });
   });
 }

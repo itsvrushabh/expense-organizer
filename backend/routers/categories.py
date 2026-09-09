@@ -1,8 +1,8 @@
 import logging
 from typing import List
-from fastapi import APIRouter, HTTPException, Query
 
 import storage
+from fastapi import APIRouter, HTTPException, Query
 from models import Category, CategoryCreate
 
 logger = logging.getLogger("expense_backend.routers.categories")
@@ -11,7 +11,9 @@ router = APIRouter(prefix="/categories", tags=["categories"])
 
 
 @router.get("", response_model=List[Category])
-async def list_categories(active_only: bool = Query(True, description="Filter only active categories")):
+async def list_categories(
+    active_only: bool = Query(True, description="Filter only active categories"),
+):
     """List categories (defaults to active only)."""
     return await storage.get_categories(active_only=active_only)
 

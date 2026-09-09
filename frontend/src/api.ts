@@ -1,4 +1,4 @@
-import type { Expense, ExpenseSummary } from "./types";
+import type { Category, CurrencyItem, Expense, ExpenseSummary } from "./types";
 
 /**
  * Browser calls go to the Bun server's /api proxy, which forwards to the
@@ -18,6 +18,12 @@ async function handle<T>(res: Response): Promise<T> {
 export const api = {
   getExpenses: async (path: string): Promise<ExpenseSummary> =>
     handle<ExpenseSummary>(await fetch(`${API_BASE}${path}`)),
+
+  getCategories: async (activeOnly: boolean = true): Promise<Category[]> =>
+    handle<Category[]>(await fetch(`${API_BASE}/categories?active_only=${activeOnly}`)),
+
+  getCurrencies: async (): Promise<CurrencyItem[]> =>
+    handle<CurrencyItem[]>(await fetch(`${API_BASE}/currencies`)),
 
   addExpense: async (data: {
     description: string;

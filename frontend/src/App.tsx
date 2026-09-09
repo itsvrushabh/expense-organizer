@@ -1,28 +1,64 @@
 import { type FormEvent, useEffect, useState } from "react";
 import "./App.css";
 import { api } from "./api";
-import { CURRENCIES, type Currency, SYMBOLS, toBase } from "./currency";
+import { CURRENCIES, type Currency, SYMBOLS, toBase, updateLiveRates } from "./currency";
 import { parseLocalDate, stepDate, toDateInput } from "./dates";
-import type { Expense, ViewMode } from "./types";
+import type { Category, Expense, ViewMode } from "./types";
 import { DayExcelView } from "./views/DayExcelView";
 import { ExcelGridView } from "./views/ExcelGridView";
 import { Grid6x6View } from "./views/Grid6x6View";
 
+const DEFAULT_CATEGORIES: Category[] = [
+  { id: 1, name: "Food", icon: "utensils", color: "#FF5722", is_active: true },
+  { id: 2, name: "Groceries", icon: "shopping-cart", color: "#4CAF50", is_active: true },
+  { id: 3, name: "Transport", icon: "car", color: "#2196F3", is_active: true },
+  { id: 4, name: "Shopping", icon: "shopping-bag", color: "#E91E63", is_active: true },
+  { id: 5, name: "Entertainment", icon: "film", color: "#9C27B0", is_active: true },
+  { id: 6, name: "Utilities", icon: "zap", color: "#FF9800", is_active: true },
+  { id: 7, name: "Health", icon: "heart", color: "#F44336", is_active: true },
+  { id: 8, name: "Travel", icon: "plane", color: "#00BCD4", is_active: true },
+  { id: 9, name: "Online", icon: "globe", color: "#3F51B5", is_active: true },
+  { id: 10, name: "Other", icon: "help-circle", color: "#607D8B", is_active: true },
+];
+
 const emptyForm = () => ({
   description: "",
   amount: "",
-  category: "",
+  category: "Food",
   date: toDateInput(new Date()),
 });
 
 function App() {
   const [currency, setCurrency] = useState<Currency>("INR");
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("month");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [newExpense, setNewExpense] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Load dynamic categories from backend
+    api
+      .getCategories()
+      .then((cats) => {
+        if (cats && cats.length > 0) {
+          setCategories(cats);
+        }
+      })
+      .catch((err) => console.warn("Could not fetch categories:", err));
+
+    // Load live exchange rates from backend
+    api
+      .getCurrencies()
+      .then((currs) => {
+        if (currs && currs.length > 0) {
+          updateLiveRates(currs);
+        }
+      })
+      .catch((err) => console.warn("Could not fetch live currencies:", err));
+  }, []);
 
   useEffect(() => {
     fetchExpenses();
@@ -105,6 +141,13 @@ function App() {
     }
   };
 
+  const activeCategories =
+    categories.length > 0 ? categories.filter((c) => c.is_active !== false) : DEFAULT_CATEGORIES;
+
+  const selectedCategory = activeCategories.find(
+    (c) => c.name.toLowerCase() === (newExpense.category || "").toLowerCase(),
+  );
+
   return (
     <div className="app">
       <header className="header">
@@ -165,13 +208,30 @@ function App() {
               onChange={(e) => setNewExpense({ ...newExpense, amount: e.target.value })}
               required
             />
-            <input
-              type="text"
-              placeholder="Category"
-              value={newExpense.category}
-              onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
-              required
-            />
+            <div className="category-select-container">
+              {selectedCategory && (
+                <span
+                  className="category-color-badge"
+                  style={{ backgroundColor: selectedCategory.color }}
+                  title={selectedCategory.name}
+                />
+              )}
+              <select
+                aria-label="Category"
+                value={newExpense.category}
+                onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value })}
+                required
+              >
+                <option value="" disabled>
+                  Select Category
+                </option>
+                {activeCategories.map((c) => (
+                  <option key={c.id || c.name} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
             <input
               type="date"
               value={newExpense.date}
@@ -188,6 +248,7 @@ function App() {
           <DayExcelView
             expenses={expenses}
             currency={currency}
+            categories={activeCategories}
             onUpdate={updateExpense}
             onDelete={removeExpense}
           />

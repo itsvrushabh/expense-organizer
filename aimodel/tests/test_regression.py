@@ -1,10 +1,10 @@
-from fastapi.testclient import TestClient
-import pytest
 from unittest.mock import patch
 
+import app.main as main_module
+import pytest
 from app.main import create_app
 from app.model import ModelServer
-import app.main as main_module
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture
@@ -29,7 +29,10 @@ def test_regression_standby_completions_fallback(client):
     assert res.status_code == 200
     data = res.json()
     assert data["choices"][0]["message"]["role"] == "assistant"
-    assert "standby" in data["choices"][0]["message"]["content"].lower() or len(data["choices"][0]["message"]["content"]) > 0
+    assert (
+        "standby" in data["choices"][0]["message"]["content"].lower()
+        or len(data["choices"][0]["message"]["content"]) > 0
+    )
 
 
 def test_regression_standby_generate_fallback(client):

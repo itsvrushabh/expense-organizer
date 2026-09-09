@@ -3,11 +3,10 @@ Smoke tests for the Core Backend API.
 Verifies critical paths, service health, and basic CRUD loop.
 """
 
-from fastapi.testclient import TestClient
 import pytest
-
-from main import create_app
 import storage
+from fastapi.testclient import TestClient
+from main import create_app
 
 
 @pytest.fixture(autouse=True)

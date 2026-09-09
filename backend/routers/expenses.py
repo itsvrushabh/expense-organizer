@@ -1,8 +1,8 @@
 from datetime import date, timedelta
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Path, Query
+
 import storage
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path, Query
 from models import Expense, ExpenseCreate, ExpenseSummary
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
@@ -37,8 +37,12 @@ async def get_combined_summary(
     week: Optional[int] = Query(None, ge=1, le=53, description="Filter by ISO week (1-53)"),
     start_date: Optional[date] = Query(None, description="Start date (inclusive)"),
     end_date: Optional[date] = Query(None, description="End date (inclusive)"),
-    categories: Optional[List[str]] = Query(None, description="List of categories to filter (e.g. Online, Shopping)"),
-    currency: Optional[str] = Query("USD", description="Target currency code (e.g. USD, INR, EUR, JPY)"),
+    categories: Optional[List[str]] = Query(
+        None, description="List of categories to filter (e.g. Online, Shopping)"
+    ),
+    currency: Optional[str] = Query(
+        "USD", description="Target currency code (e.g. USD, INR, EUR, JPY)"
+    ),
 ):
     """
     Combined high-performance ExpenseSummary using SQL views and fn_expense_summary.

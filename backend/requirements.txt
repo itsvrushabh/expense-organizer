@@ -6,3 +6,5 @@ pytest-cov
 httpx
 ruff
 pytest-cov
+psycopg[binary]
+psycopg-pool
