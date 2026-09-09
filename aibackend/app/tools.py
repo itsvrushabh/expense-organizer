@@ -4,7 +4,11 @@ from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
 from app.schemas import ExpenseDraft, ToolCall, ToolResult
-from app.expense_client import insert_expense_to_db, normalize_iso_date
+from app.expense_client import (
+    insert_expense_to_db,
+    normalize_iso_date,
+    refresh_exchange_rates_in_backend,
+)
 from app.config import STANDARD_CATEGORIES
 
 logger = logging.getLogger("aibackend.tools")
@@ -114,6 +118,17 @@ TOOLS_SCHEMA = [
                         "description": "Optional reason for cancelling the draft",
                     }
                 },
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "refresh_exchange_rates",
+            "description": "Refreshes and gets the latest live currency exchange rates from market feeds (USD, INR, EUR, JPY, GBP, CNY). Use when the user asks to update or check exchange rates or currency conversions.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
             },
         },
     },
@@ -258,6 +273,29 @@ def tool_cancel_draft(reason: Optional[str] = None) -> ToolResult:
     )
 
 
+async def tool_refresh_exchange_rates() -> ToolResult:
+    """Refreshes live currency exchange rates via the core backend."""
+    currencies = await refresh_exchange_rates_in_backend()
+    if currencies:
+        lines = []
+        for c in currencies:
+            code = c.get("code", "")
+            sym = c.get("symbol", "")
+            rate = float(c.get("exchange_rate", 1.0))
+            lines.append(f"• **{code}** ({sym}): {rate:.4f} per USD")
+        rates_str = "\n".join(lines)
+        return ToolResult(
+            status="idle",
+            message=f"✅ Successfully refreshed live currency exchange rates:\n\n{rates_str}",
+            action_required="none",
+        )
+    return ToolResult(
+        status="idle",
+        message="⚠️ Could not connect to core backend to refresh exchange rates. Please ensure backend is running.",
+        action_required="none",
+    )
+
+
 async def execute_tool(
     tool_call: ToolCall,
     current_draft: Optional[ExpenseDraft] = None,
@@ -301,6 +339,8 @@ async def execute_tool(
         )
     elif t_name == "cancel_draft":
         return tool_cancel_draft(reason=args.get("reason"))
+    elif t_name == "refresh_exchange_rates":
+        return await tool_refresh_exchange_rates()
     else:
         logger.warning("Unknown tool call: %s", t_name)
         return ToolResult(

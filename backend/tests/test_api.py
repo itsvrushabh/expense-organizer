@@ -17,6 +17,15 @@ def test_root_lists_endpoints(client):
     body = response.json()
     assert body["message"] == "Expense Organizer API"
     assert body["endpoints"]["add_expense"] == "POST /expenses"
+    assert body["endpoints"]["health"] == "GET /health"
+
+
+def test_health_endpoint(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "healthy"
+    assert body["database"] in ("postgresql", "in_memory")
 
 
 def test_create_expense_echoes_fields(client, sample_payload):
@@ -41,7 +50,13 @@ def test_create_expense_rejects_invalid_date(client, sample_payload):
 def test_get_all_empty_summary(client):
     response = client.get("/expenses")
     assert response.status_code == 200
-    assert response.json() == {"total": 0, "count": 0, "expenses": []}
+    assert response.json() == {
+        "total": 0,
+        "count": 0,
+        "currency": "USD",
+        "currency_symbol": "$",
+        "expenses": [],
+    }
 
 
 def test_get_all_returns_summary(client, sample_payload):

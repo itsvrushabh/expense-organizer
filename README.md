@@ -67,7 +67,10 @@ docker-compose up -d --build
 - 🩺 **AI Health Status**: [http://localhost:18001/health](http://localhost:18001/health)
 
 > [!NOTE]
-> **Zero Unnecessary Port Exposure**: Both `backend` (internal port `8000`) and `aimodel` (internal port `8002`) run strictly on the internal Docker network with **no host port bindings**. All client API requests route through the Bun reverse proxy at `http://localhost:13000/api` or communicate with the AI assistant on port `18001`.
+> **Zero Unnecessary Port Exposure**:
+> - `backend` (internal port `8000`), `aimodel` (internal port `8002`), and `db` (PostgreSQL internal port `5432`) run strictly inside the Docker bridge network with **no host port bindings**.
+> - PostgreSQL database files are persisted on the host machine at `./postgres_data` outside the container and are consumed exclusively by `backend`.
+> - All client API requests route through the Bun reverse proxy at `http://localhost:13000/api` or communicate with the AI assistant on port `18001`.
 
 ---
 
@@ -178,12 +181,13 @@ expense-organizer/
 │   └── setup.md                  # Deployment & setup walkthrough
 ├── .github/
 │   └── workflows/build-mobile.yml # CI/CD for Android & iOS builds
+├── postgres_data/                # PostgreSQL host data directory (persisted outside container, gitignored)
 ├── backend/                      # Pure REST core backend (internal port 8000)
 │   ├── main.py                   # Pure REST app factory, CORS, endpoint catalog
 │   ├── models.py                 # Pydantic schemas (Expense, ExpenseSummary)
-│   ├── storage.py                # In-memory data store
+│   ├── storage.py                # PostgreSQL storage engine (with in-memory fallback)
 │   ├── routers/expenses.py       # REST route handlers & aggregations
-│   ├── tests/                    # 34 pytest unit & integration tests
+│   ├── tests/                    # 35 pytest unit & integration tests
 │   ├── Dockerfile
 │   └── requirements.txt
 ├── aibackend/                    # AI Orchestration container (port 18001)

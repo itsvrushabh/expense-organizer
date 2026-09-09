@@ -13,7 +13,9 @@ from app.tools import (
     tool_commit_expense,
     tool_ask_clarification,
     tool_cancel_draft,
+    execute_tool,
     ExpenseDraft,
+    ToolCall,
 )
 import app.main as main_module
 
@@ -126,3 +128,19 @@ def test_chat_cancel(client):
     res = client.post("/api/chat/cancel", json={"session_id": session_id})
     assert res.status_code == 200
     assert res.json()["status"] == "cancelled"
+
+
+@pytest.mark.anyio
+@patch("app.tools.refresh_exchange_rates_in_backend", new_callable=AsyncMock)
+async def test_refresh_exchange_rates_tool(mock_refresh):
+    mock_refresh.return_value = [
+        {"code": "USD", "symbol": "$", "exchange_rate": 1.0},
+        {"code": "INR", "symbol": "₹", "exchange_rate": 94.84},
+        {"code": "EUR", "symbol": "€", "exchange_rate": 0.86},
+    ]
+
+    res = await execute_tool(ToolCall(tool="refresh_exchange_rates", arguments={}))
+    assert res.status == "idle"
+    assert "Successfully refreshed live currency exchange rates" in res.message
+    assert "INR" in res.message
+    assert "94.8400" in res.message
