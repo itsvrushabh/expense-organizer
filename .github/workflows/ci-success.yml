@@ -1,0 +1,54 @@
+name: CI / Success
+
+on:
+  workflow_run:
+    workflows:
+      - CI / Python
+      - CI / Frontend
+      - CI / Flutter
+      - CI / Rust
+      - CI / Services
+    types: [completed]
+
+permissions:
+  actions: read
+  checks: read
+  contents: read
+
+concurrency:
+  group: ci-success-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  aggregate:
+    name: ci-success
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check all CI sub-workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          workflows=(
+            ci-python.yml
+            ci-frontend.yml
+            ci-flutter.yml
+            ci-rust.yml
+            ci-services.yml
+          )
+          failed=0
+          for workflow in "${workflows[@]}"; do
+            conclusion=$(gh api \
+              "/repos/${REPOSITORY}/actions/workflows/${workflow}/runs?head_sha=${COMMIT_SHA}&per_page=20" \
+              --jq '.workflow_runs | map(select(.status == "completed")) | sort_by(.updated_at) | last.conclusion // "missing"')
+            echo "${workflow}: ${conclusion}"
+            if [[ "${conclusion}" != success ]]; then
+              failed=1
+            fi
+          done
+          if [[ ${failed} -ne 0 ]]; then
+            echo "One or more CI sub-workflows did not pass."
+            exit 1
+          fi

@@ -119,9 +119,15 @@ docker-compose logs -f aimodel
 
 ## GitHub Actions CI and Releases
 
-Every commit pushed to any branch and every pull request runs the fast checks in
-`.github/workflows/ci.yml`. These checks cover Python tests and Ruff formatting/linting,
-frontend TypeScript and Biome checks, both Flutter applications, and the Rust engine.
+Every commit pushed to any branch and every pull request runs the CI sub-workflows in
+`.github/workflows/`. The visible workflows are `ci-python.yml`, `ci-frontend.yml`,
+`ci-flutter.yml`, `ci-rust.yml`, and `ci-services.yml`. Together they cover Python tests
+and Ruff formatting/linting, frontend TypeScript and Biome checks, both Flutter
+applications, the Rust engine, Docker configuration, and lightweight service probes.
+
+`ci-success.yml` runs after the sub-workflows complete and provides the aggregate
+branch-protection check. Require the displayed `CI / Success / ci-success` check in the
+repository branch rules.
 
 The same workflow runs lightweight backend/frontend Docker startup probes. The full model
 health check is reserved for release or manually triggered runs because it requires the
