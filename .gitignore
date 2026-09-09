@@ -15,3 +15,4 @@ dist/
 # Coverage artifacts
 .coverage
 htmlcov/
+aibackend/models/
