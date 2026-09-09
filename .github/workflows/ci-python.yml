@@ -22,16 +22,14 @@ jobs:
         include:
           - service: backend
             python: "3.13"
-            requirements: |
-              -r requirements.txt
-            cache: |
-              backend/requirements.txt
+            requirements: requirements.txt
+            cache: backend/requirements.txt
           - service: aibackend
-            python: "3.11"
+            python: "3.13"
             requirements: "requirements.txt"
             cache: aibackend/requirements.txt
           - service: aimodel
-            python: "3.11"
+            python: "3.13"
             requirements: "requirements.txt"
             cache: aimodel/requirements.txt
     steps:
