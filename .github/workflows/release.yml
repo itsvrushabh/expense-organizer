@@ -99,16 +99,8 @@ jobs:
       - name: Build unsigned IPA
         working-directory: ${{ matrix.directory }}
         run: |
-          if [[ ! -d ios || ! -f ios/Podfile ]]; then
-            flutter create --platforms=ios .
-          fi
           flutter pub get
           flutter test
-          if [[ "${GITHUB_REF_TYPE}" == tag ]]; then
-            version_name="${GITHUB_REF_NAME#v}"
-          else
-            version_name="0.0.0-preview"
-          fi
           flutter build ios --release --no-codesign \
             --build-name "${version_name}" \
             --build-number "${GITHUB_RUN_NUMBER}"
