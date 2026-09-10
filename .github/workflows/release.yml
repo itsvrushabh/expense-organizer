@@ -109,7 +109,7 @@ jobs:
           else
             version_name="0.0.0-preview"
           fi
-          flutter build ios --release --no-codesign --simulator \
+          flutter build ios --release --no-codesign \
             --build-name "${version_name}" \
             --build-number "${GITHUB_RUN_NUMBER}"
           compgen -G "build/ios/iphonesimulator/*.app" >/dev/null
