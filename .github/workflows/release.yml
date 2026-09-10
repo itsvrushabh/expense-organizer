@@ -109,15 +109,15 @@ jobs:
           else
             version_name="0.0.0-preview"
           fi
-          flutter build ios --release --no-codesign \
+          flutter build ios --release --no-codesign --simulator \
             --build-name "${version_name}" \
             --build-number "${GITHUB_RUN_NUMBER}"
-          compgen -G "build/ios/ipa/*.ipa" >/dev/null
+          compgen -G "build/ios/iphonesimulator/*.app" >/dev/null
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}-${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}-unsigned-preview
-          path: ${{ matrix.directory }}/build/ios/ipa/*.ipa
+          path: ${{ matrix.directory }}/build/ios/iphonesimulator/*.app
           if-no-files-found: error
           retention-days: 7
 
