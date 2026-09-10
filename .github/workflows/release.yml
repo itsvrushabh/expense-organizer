@@ -49,7 +49,7 @@ jobs:
             directory: expense-helper/mobile
             artifact: helper-android
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -91,7 +91,7 @@ jobs:
             directory: expense-helper/mobile
             artifact: helper-ios
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -142,7 +142,7 @@ jobs:
           - service: aimodel
             context: aimodel
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: docker/login-action@v4
         with:
           registry: ${{ env.REGISTRY }}
