@@ -103,17 +103,13 @@ jobs:
             flutter create --platforms=ios .
           fi
           flutter pub get
-          if [[ ! -f ios/Podfile ]]; then
-            echo "iOS Podfile was not generated" >&2
-            exit 1
-          fi
-          (cd ios && pod install --repo-update)
+          flutter test
           if [[ "${GITHUB_REF_TYPE}" == tag ]]; then
             version_name="${GITHUB_REF_NAME#v}"
           else
             version_name="0.0.0-preview"
           fi
-          flutter build ipa --release --no-codesign \
+          flutter build ios --release --no-codesign \
             --build-name "${version_name}" \
             --build-number "${GITHUB_RUN_NUMBER}"
           compgen -G "build/ios/ipa/*.ipa" >/dev/null

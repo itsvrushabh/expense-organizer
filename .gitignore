@@ -69,3 +69,4 @@ Runner/GeneratedPluginRegistrant.*
 !default.pbxuser
 !default.perspectivev3
 expense-helper/mobile/pubspec.lock
+mobile/pubspec.lock
