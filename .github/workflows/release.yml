@@ -96,16 +96,22 @@ jobs:
         with:
           channel: stable
           cache: true
-      - name: Build unsigned IPA
+      - name: Build iOS release
         working-directory: ${{ matrix.directory }}
         run: |
+          if [[ ! -d ios ]]; then flutter create --platforms=ios .; fi
           flutter pub get
+          if [[ "${GITHUB_REF_TYPE}" == tag ]]; then
+            version_name="${GITHUB_REF_NAME#v}"
+          else
+            version_name="0.0.0"
+          fi
           flutter test
           flutter build ios --release --no-codesign \
             --build-name "${version_name}" \
             --build-number "${GITHUB_RUN_NUMBER}"
           compgen -G "build/ios/iphonesimulator/*.app" >/dev/null
-      - name: Upload IPA artifact
+      - name: Upload iOS artifact
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}-${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}-unsigned-preview
