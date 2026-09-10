@@ -68,7 +68,7 @@ jobs:
             --build-name "${version_name}" \
             --build-number "${GITHUB_RUN_NUMBER}"
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}-${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}-preview
           path: ${{ matrix.directory }}/build/app/outputs/flutter-apk/app-release.apk
@@ -114,7 +114,7 @@ jobs:
             --build-number "${GITHUB_RUN_NUMBER}"
           compgen -G "build/ios/iphonesimulator/*.app" >/dev/null
       - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}-${{ github.ref_type == 'tag' && github.ref_name || format('manual-{0}', github.run_number) }}-unsigned-preview
           path: ${{ matrix.directory }}/build/ios/iphonesimulator/*.app
